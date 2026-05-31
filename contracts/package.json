@@ -1,0 +1,22 @@
+{
+  "name": "@autoaugur/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network somnia"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "hardhat": "^2.28.6",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.8.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
+    "@somnia-chain/reactivity-contracts": "^0.1.7",
+    "dotenv": "^16.0.0",
+    "viem": "^2.51.3"
+  }
+}
