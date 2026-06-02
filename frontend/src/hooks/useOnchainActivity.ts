@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPublicClient, http, type Address, type Log, decodeAbiParameters } from "viem";
 import { CONTRACTS } from "@/lib/config";
-import { SANTIORA_REACTIVE_V2, SANTIORA_FINAL_V2, MARKET_REGISTRY } from "@/lib/onchain";
+import { SANTIORA_REACTIVE_V2, SANTIORA_FINAL_V3, MARKET_REGISTRY } from "@/lib/onchain";
 
 const RPC_URL = "https://dream-rpc.somnia.network";
 const POLL_INTERVAL = 15000;
@@ -164,7 +164,7 @@ export function useOnchainActivity(limit: number = 50) {
     const client = clientRef.current;
     const [rLogs, fLogs] = await Promise.allSettled([
       getLogsChunked(client, SANTIORA_REACTIVE_V2 as Address, fromBlock, toBlock),
-      getLogsChunked(client, SANTIORA_FINAL_V2 as Address, fromBlock, toBlock),
+      getLogsChunked(client, SANTIORA_FINAL_V3 as Address, fromBlock, toBlock),
     ]);
 
     const items: OnchainActivity[] = [];

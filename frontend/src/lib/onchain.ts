@@ -9,9 +9,13 @@ export const publicClient = createPublicClient({
 
 export const SANTIORA_FINAL = "0x41054123916e5840ab5a3846921eaa6343f3Fd55" as const;
 export const SANTIORA_FINAL_V2 = "0x699924676bcea563a3171c916a01a4ccafb63ee8" as const;
+export const SANTIORA_FINAL_V3 = "0x06d7308C8BC931737F5D448C9a755D84CE23773f" as const;
+export const SANTIORA_V3_CREATOR = "0x7AACF3842Da5Ab82FA9446bb94D1bB7655B8cb42" as const;
+export const SANTIORA_V3_RESOLVER = "0xA4DC6742B061Cafc7847D7A6c285CDf2Ffcbb324" as const;
 export const SANTIORA_REACTIVE = "0xf9032d080dEBD904e04505B91357353c10b2B39D" as const;
 export const SANTIORA_REACTIVE_V2 = "0x9a907ccbf539fe98f76f913d6d8c65190b75d248" as const;
-export const MARKET_REGISTRY = "0x9e59B7016E3Bc6650d8fb074A58F30C03Fa50677" as const;
+export const MARKET_REGISTRY = "0xd68d350D6eedE5DbABCd658EBA009583FF28A46B" as const;
+export const MARKET_REGISTRY_V1 = "0x9e59B7016E3Bc6650d8fb074A58F30C03Fa50677" as const;
 
 const REGISTRY_ABI = [
   { type: "function", name: "getMarket", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }, { type: "string" }, { type: "uint256" }, { type: "uint256" }, { type: "string" }, { type: "uint8" }, { type: "string" }, { type: "uint256" }, { type: "bool" }], stateMutability: "view" },
@@ -282,7 +286,7 @@ export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
 
   try {
     const statsResult = await publicClient.readContract({
-      address: SANTIORA_FINAL_V2 as Address,
+      address: SANTIORA_FINAL_V3 as Address,
       abi: FINALV2_ABI,
       functionName: "getStats",
     });
@@ -305,7 +309,7 @@ export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
 
   try {
     const rulesStateResult = await publicClient.readContract({
-      address: SANTIORA_FINAL_V2 as Address,
+      address: SANTIORA_FINAL_V3 as Address,
       abi: FINALV2_ABI,
       functionName: "getRulesState",
     });
@@ -315,7 +319,7 @@ export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
 
   try {
     const rulesResult = await publicClient.readContract({
-      address: SANTIORA_FINAL_V2 as Address,
+      address: SANTIORA_FINAL_V3 as Address,
       abi: FINALV2_ABI,
       functionName: "rules",
     });

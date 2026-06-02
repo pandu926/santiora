@@ -5,7 +5,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchFinalV2Stats, fetchReactiveV2Stats, FinalV2Stats, ReactiveV2Stats, SANTIORA_FINAL_V2, SANTIORA_REACTIVE_V2, MARKET_REGISTRY } from "@/lib/onchain";
+import { fetchFinalV2Stats, fetchReactiveV2Stats, FinalV2Stats, ReactiveV2Stats, SANTIORA_FINAL_V3, SANTIORA_V3_CREATOR, SANTIORA_V3_RESOLVER, SANTIORA_REACTIVE_V2, MARKET_REGISTRY } from "@/lib/onchain";
 import { CONTRACTS } from "@/lib/config";
 
 const EXPLORER = "https://shannon-explorer.somnia.network";
@@ -182,9 +182,11 @@ export default function AIPage() {
           <h3 className="text-xs font-semibold">Deployed Contracts (Somnia Testnet)</h3>
         </div>
         <div className="divide-y divide-border/50">
-          <ContractRow name="SantioraFinalV2" address={SANTIORA_FINAL_V2} detail={`${Number(f.balance).toFixed(2)} STT`} />
+          <ContractRow name="SantioraFinalV3 (Coordinator)" address={SANTIORA_FINAL_V3} detail={`${Number(f.balance).toFixed(2)} STT`} />
+          <ContractRow name="SantioraV3Creator" address={SANTIORA_V3_CREATOR} detail="Creation pipeline" />
+          <ContractRow name="SantioraV3Resolver" address={SANTIORA_V3_RESOLVER} detail="Resolution pipeline" />
           <ContractRow name="SantioraReactiveV2" address={SANTIORA_REACTIVE_V2} detail={`${r.createFires + r.resolveFires} fires`} />
-          <ContractRow name="MarketRegistry" address={MARKET_REGISTRY} detail={`${f.totalMarkets} markets`} />
+          <ContractRow name="MarketRegistryV2" address={MARKET_REGISTRY} detail={`${f.totalMarkets} markets`} />
           <ContractRow name="Agent Platform" address={CONTRACTS.PLATFORM} detail="Proxy → 0xc49e..." />
           <ContractRow name="LLM Agent" address="12847293847561029384" detail="Qwen3-30B | inferToolsChat" />
         </div>

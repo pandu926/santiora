@@ -1,0 +1,352 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - button "Open table of contents" [ref=e7] [cursor=pointer]:
+          - img [ref=e8]
+        - link "Logo" [ref=e10] [cursor=pointer]:
+          - /url: /
+          - img "Logo" [ref=e11]
+      - generic [ref=e13]:
+        - generic [ref=e15]:
+          - img [ref=e17]
+          - textbox "Ask or search" [ref=e19]:
+            - /placeholder: Ask or search…
+          - generic [ref=e21]:
+            - generic [ref=e23]: Ctrl
+            - generic [ref=e24]: k
+        - alert [ref=e25]
+      - generic [ref=e26]:
+        - link "Developer Discord" [ref=e27] [cursor=pointer]:
+          - /url: http://discord.gg/Somnia
+          - generic [ref=e28]: Developer Discord
+        - button "More" [ref=e30] [cursor=pointer]:
+          - generic [ref=e31]: More
+          - img [ref=e32]
+          - img [ref=e34]
+    - navigation "Main" [ref=e37]:
+      - generic [ref=e38]:
+        - list "Sections" [ref=e41]:
+          - listitem [ref=e42]:
+            - link "Documentation" [ref=e43] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e44]: Documentation
+          - listitem [ref=e45]:
+            - link "Concepts" [ref=e46] [cursor=pointer]:
+              - /url: /concepts
+              - generic [ref=e47]: Concepts
+          - listitem [ref=e48]:
+            - link "Agents" [ref=e49] [cursor=pointer]:
+              - /url: /agents
+              - generic [ref=e50]: Agents
+        - button "Scroll back":
+          - img
+        - button "Scroll further":
+          - img
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - button "Copy" [ref=e59] [cursor=pointer]:
+            - img [ref=e60]
+            - generic [ref=e62]: Copy
+          - button "More" [ref=e63] [cursor=pointer]:
+            - img [ref=e64]
+        - button "On this page" [ref=e66] [cursor=pointer]:
+          - img [ref=e67]
+      - navigation "Breadcrumb" [ref=e69]:
+        - list [ref=e70]:
+          - listitem [ref=e71]:
+            - link "Base Agents" [ref=e72] [cursor=pointer]:
+              - /url: /agents/base-agents
+      - heading "JSON API Request" [level=1] [ref=e73]
+    - generic [ref=e74]:
+      - paragraph [ref=e75]: Fetches JSON data from any public API endpoint and extracts specific values using a selector path. This agent is the fundamental building block for creating on-chain oracles.
+      - heading "Direct link to heading Methods" [level=2] [ref=e76]:
+        - link "Direct link to heading" [ref=e78] [cursor=pointer]:
+          - /url: "#methods"
+          - img [ref=e79]
+        - generic [ref=e81]: Methods
+      - generic [ref=e84]:
+        - rowgroup [ref=e85]:
+          - row "Function Inputs Output Use Case" [ref=e86]:
+            - columnheader "Function" [ref=e87]
+            - columnheader "Inputs" [ref=e88]
+            - columnheader "Output" [ref=e89]
+            - columnheader "Use Case" [ref=e90]
+        - table [ref=e91]:
+          - rowgroup [ref=e92]:
+            - row "fetchString url, selector string Text values, names" [ref=e93]:
+              - cell "fetchString" [ref=e94]:
+                - paragraph [ref=e96]:
+                  - code [ref=e97]: fetchString
+              - cell "url, selector" [ref=e98]:
+                - paragraph [ref=e100]: url, selector
+              - cell "string" [ref=e101]:
+                - paragraph [ref=e103]: string
+              - cell "Text values, names" [ref=e104]:
+                - paragraph [ref=e106]: Text values, names
+            - row "fetchUint url, selector, decimals uint256 Prices, positive numbers" [ref=e107]:
+              - cell "fetchUint" [ref=e108]:
+                - paragraph [ref=e110]:
+                  - code [ref=e111]: fetchUint
+              - cell "url, selector, decimals" [ref=e112]:
+                - paragraph [ref=e114]: url, selector, decimals
+              - cell "uint256" [ref=e115]:
+                - paragraph [ref=e117]: uint256
+              - cell "Prices, positive numbers" [ref=e118]:
+                - paragraph [ref=e120]: Prices, positive numbers
+            - row "fetchInt url, selector, decimals int256 Temperatures, signed numbers" [ref=e121]:
+              - cell "fetchInt" [ref=e122]:
+                - paragraph [ref=e124]:
+                  - code [ref=e125]: fetchInt
+              - cell "url, selector, decimals" [ref=e126]:
+                - paragraph [ref=e128]: url, selector, decimals
+              - cell "int256" [ref=e129]:
+                - paragraph [ref=e131]: int256
+              - cell "Temperatures, signed numbers" [ref=e132]:
+                - paragraph [ref=e134]: Temperatures, signed numbers
+            - row "fetchBool url, selector bool Flags, status checks" [ref=e135]:
+              - cell "fetchBool" [ref=e136]:
+                - paragraph [ref=e138]:
+                  - code [ref=e139]: fetchBool
+              - cell "url, selector" [ref=e140]:
+                - paragraph [ref=e142]: url, selector
+              - cell "bool" [ref=e143]:
+                - paragraph [ref=e145]: bool
+              - cell "Flags, status checks" [ref=e146]:
+                - paragraph [ref=e148]: Flags, status checks
+            - row "fetchStringArray url, selector string[] Lists of names/IDs" [ref=e149]:
+              - cell "fetchStringArray" [ref=e150]:
+                - paragraph [ref=e152]:
+                  - code [ref=e153]: fetchStringArray
+              - cell "url, selector" [ref=e154]:
+                - paragraph [ref=e156]: url, selector
+              - cell "string[]" [ref=e157]:
+                - paragraph [ref=e159]: string[]
+              - cell "Lists of names/IDs" [ref=e160]:
+                - paragraph [ref=e162]: Lists of names/IDs
+            - row "fetchUintArray url, selector, decimals uint256[] Price lists, numeric arrays" [ref=e163]:
+              - cell "fetchUintArray" [ref=e164]:
+                - paragraph [ref=e166]:
+                  - code [ref=e167]: fetchUintArray
+              - cell "url, selector, decimals" [ref=e168]:
+                - paragraph [ref=e170]: url, selector, decimals
+              - cell "uint256[]" [ref=e171]:
+                - paragraph [ref=e173]: uint256[]
+              - cell "Price lists, numeric arrays" [ref=e174]:
+                - paragraph [ref=e176]: Price lists, numeric arrays
+      - heading "Direct link to heading Parameters" [level=2] [ref=e177]:
+        - link "Direct link to heading" [ref=e179] [cursor=pointer]:
+          - /url: "#parameters"
+          - img [ref=e180]
+        - generic [ref=e182]: Parameters
+      - generic [ref=e185]:
+        - rowgroup [ref=e186]:
+          - row "Input Type Description" [ref=e187]:
+            - columnheader "Input" [ref=e188]
+            - columnheader "Type" [ref=e189]
+            - columnheader "Description" [ref=e190]
+        - table [ref=e191]:
+          - rowgroup [ref=e192]:
+            - row "url string The URL of the JSON API endpoint to fetch" [ref=e193]:
+              - cell "url" [ref=e194]:
+                - paragraph [ref=e196]:
+                  - code [ref=e197]: url
+              - cell "string" [ref=e198]:
+                - paragraph [ref=e200]: string
+              - cell "The URL of the JSON API endpoint to fetch" [ref=e201]:
+                - paragraph [ref=e203]: The URL of the JSON API endpoint to fetch
+            - row "selector string A dot-notation path to extract from the response (e.g., data.price or items[0].name)" [ref=e204]:
+              - cell "selector" [ref=e205]:
+                - paragraph [ref=e207]:
+                  - code [ref=e208]: selector
+              - cell "string" [ref=e209]:
+                - paragraph [ref=e211]: string
+              - cell "A dot-notation path to extract from the response (e.g., data.price or items[0].name)" [ref=e212]:
+                - paragraph [ref=e214]:
+                  - text: A dot-notation path to extract from the response (e.g.,
+                  - code [ref=e215]: data.price
+                  - text: or
+                  - code [ref=e216]: items[0].name
+                  - text: )
+            - row "decimals uint8 Number of decimal places to scale the value by (multiplies by 10^decimals)" [ref=e217]:
+              - cell "decimals" [ref=e218]:
+                - paragraph [ref=e220]:
+                  - code [ref=e221]: decimals
+              - cell "uint8" [ref=e222]:
+                - paragraph [ref=e224]: uint8
+              - cell "Number of decimal places to scale the value by (multiplies by 10^decimals)" [ref=e225]:
+                - paragraph [ref=e227]: Number of decimal places to scale the value by (multiplies by 10^decimals)
+      - heading "Direct link to heading Decimal Scaling" [level=3] [ref=e228]:
+        - link "Direct link to heading" [ref=e230] [cursor=pointer]:
+          - /url: "#decimal-scaling"
+          - img [ref=e231]
+        - generic [ref=e233]: Decimal Scaling
+      - paragraph [ref=e234]:
+        - text: The
+        - code [ref=e235]: decimals
+        - text: parameter is used by
+        - code [ref=e236]: fetchUint
+        - text: ","
+        - code [ref=e237]: fetchInt
+        - text: ", and"
+        - code [ref=e238]: fetchUintArray
+        - text: to convert floating-point values from APIs into blockchain-compatible integers. The value is multiplied by 10^decimals.
+      - paragraph [ref=e239]:
+        - text: For example, with
+        - code [ref=e240]: decimals=8
+        - text: ":"
+      - list [ref=e241]:
+        - listitem [ref=e242]:
+          - generic [ref=e244]: •
+          - paragraph [ref=e246]:
+            - code [ref=e247]: "42000.50"
+            - text: becomes
+            - code [ref=e248]: "4200050000000"
+        - listitem [ref=e249]:
+          - generic [ref=e251]: •
+          - paragraph [ref=e253]:
+            - code [ref=e254]: "0.00001234"
+            - text: becomes
+            - code [ref=e255]: "1234"
+      - paragraph [ref=e256]: This follows the standard pattern for handling decimals in smart contracts (e.g., ERC-20 tokens typically use 18 decimals).
+      - heading "Direct link to heading Method Signatures" [level=2] [ref=e257]:
+        - link "Direct link to heading" [ref=e259] [cursor=pointer]:
+          - /url: "#method-signatures"
+          - img [ref=e260]
+        - generic [ref=e262]: Method Signatures
+      - generic [ref=e264]:
+        - button "Copy" [ref=e265] [cursor=pointer]:
+          - generic [ref=e266]: Copy
+        - code [ref=e268]:
+          - generic [ref=e270]: function fetchString(string url, string selector) returns (string)
+          - generic [ref=e272]: function fetchUint(string url, string selector, uint8 decimals) returns (uint256)
+          - generic [ref=e274]: function fetchInt(string url, string selector, uint8 decimals) returns (int256)
+          - generic [ref=e276]: function fetchBool(string url, string selector) returns (bool)
+          - generic [ref=e278]: function fetchStringArray(string url, string selector) returns (string[])
+          - generic [ref=e280]: function fetchUintArray(string url, string selector, uint8 decimals) returns (uint256[])
+      - heading "Direct link to heading Example Use Cases" [level=2] [ref=e281]:
+        - link "Direct link to heading" [ref=e283] [cursor=pointer]:
+          - /url: "#example-use-cases"
+          - img [ref=e284]
+        - generic [ref=e286]: Example Use Cases
+      - list [ref=e287]:
+        - listitem [ref=e288]:
+          - generic [ref=e290]: •
+          - paragraph [ref=e292]: Fetching cryptocurrency prices from CoinGecko or similar APIs
+        - listitem [ref=e293]:
+          - generic [ref=e295]: •
+          - paragraph [ref=e297]: Retrieving weather data for parametric insurance contracts
+        - listitem [ref=e298]:
+          - generic [ref=e300]: •
+          - paragraph [ref=e302]: Pulling sports scores for prediction markets
+        - listitem [ref=e303]:
+          - generic [ref=e305]: •
+          - paragraph [ref=e307]: Accessing any REST API that returns JSON
+      - heading "Direct link to heading Usage Examples" [level=2] [ref=e308]:
+        - link "Direct link to heading" [ref=e310] [cursor=pointer]:
+          - /url: "#usage-examples"
+          - img [ref=e311]
+        - generic [ref=e313]: Usage Examples
+      - heading "Direct link to heading Fetch a Price as uint256" [level=3] [ref=e314]:
+        - link "Direct link to heading" [ref=e316] [cursor=pointer]:
+          - /url: "#fetch-a-price-as-uint256"
+          - img [ref=e317]
+        - generic [ref=e319]: Fetch a Price as uint256
+      - generic [ref=e321]:
+        - button "Copy" [ref=e322] [cursor=pointer]:
+          - generic [ref=e323]: Copy
+        - code [ref=e325]:
+          - generic [ref=e327]: "import { encodeFunctionData } from 'viem';"
+          - generic [ref=e331]: "const abi = [{"
+          - generic [ref=e333]: "type: 'function',"
+          - generic [ref=e335]: "name: 'fetchUint',"
+          - generic [ref=e337]: "inputs: ["
+          - generic [ref=e339]: "{ name: 'url', type: 'string' },"
+          - generic [ref=e341]: "{ name: 'selector', type: 'string' },"
+          - generic [ref=e343]: "{ name: 'decimals', type: 'uint8' }"
+          - generic [ref=e345]: "],"
+          - generic [ref=e347]: "outputs: [{ name: 'result', type: 'uint256' }]"
+          - generic [ref=e349]: "}];"
+          - generic [ref=e353]: // Fetch Bitcoin price with 8 decimal places
+          - generic [ref=e355]: "const calldata = encodeFunctionData({"
+          - generic [ref=e357]: abi,
+          - generic [ref=e359]: "functionName: 'fetchUint',"
+          - generic [ref=e361]: "args: ["
+          - generic [ref=e363]: "'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd',"
+          - generic [ref=e365]: "'bitcoin.usd',"
+          - generic [ref=e367]: "8"
+          - generic [ref=e369]: "]"
+          - generic [ref=e371]: "});"
+      - heading "Direct link to heading Fetch a String Value" [level=3] [ref=e372]:
+        - link "Direct link to heading" [ref=e374] [cursor=pointer]:
+          - /url: "#fetch-a-string-value"
+          - img [ref=e375]
+        - generic [ref=e377]: Fetch a String Value
+      - generic [ref=e379]:
+        - button "Copy" [ref=e380] [cursor=pointer]:
+          - generic [ref=e381]: Copy
+        - code [ref=e383]:
+          - generic [ref=e385]: "const abi = [{"
+          - generic [ref=e387]: "type: 'function',"
+          - generic [ref=e389]: "name: 'fetchString',"
+          - generic [ref=e391]: "inputs: ["
+          - generic [ref=e393]: "{ name: 'url', type: 'string' },"
+          - generic [ref=e395]: "{ name: 'selector', type: 'string' }"
+          - generic [ref=e397]: "],"
+          - generic [ref=e399]: "outputs: [{ name: 'result', type: 'string' }]"
+          - generic [ref=e401]: "}];"
+          - generic [ref=e405]: // Fetch a token symbol
+          - generic [ref=e407]: "const calldata = encodeFunctionData({"
+          - generic [ref=e409]: abi,
+          - generic [ref=e411]: "functionName: 'fetchString',"
+          - generic [ref=e413]: "args: ["
+          - generic [ref=e415]: "'https://api.example.com/token/info',"
+          - generic [ref=e417]: "'data.symbol'"
+          - generic [ref=e419]: "]"
+          - generic [ref=e421]: "});"
+      - heading "Direct link to heading Fetch a Boolean Value" [level=3] [ref=e422]:
+        - link "Direct link to heading" [ref=e424] [cursor=pointer]:
+          - /url: "#fetch-a-boolean-value"
+          - img [ref=e425]
+        - generic [ref=e427]: Fetch a Boolean Value
+      - generic [ref=e429]:
+        - button "Copy" [ref=e430] [cursor=pointer]:
+          - generic [ref=e431]: Copy
+        - code [ref=e433]:
+          - generic [ref=e435]: "const abi = [{"
+          - generic [ref=e437]: "type: 'function',"
+          - generic [ref=e439]: "name: 'fetchBool',"
+          - generic [ref=e441]: "inputs: ["
+          - generic [ref=e443]: "{ name: 'url', type: 'string' },"
+          - generic [ref=e445]: "{ name: 'selector', type: 'string' }"
+          - generic [ref=e447]: "],"
+          - generic [ref=e449]: "outputs: [{ name: 'result', type: 'bool' }]"
+          - generic [ref=e451]: "}];"
+          - generic [ref=e455]: // Check if a market is open
+          - generic [ref=e457]: "const calldata = encodeFunctionData({"
+          - generic [ref=e459]: abi,
+          - generic [ref=e461]: "functionName: 'fetchBool',"
+          - generic [ref=e463]: "args: ["
+          - generic [ref=e465]: "'https://api.example.com/market/status',"
+          - generic [ref=e467]: "'isOpen'"
+          - generic [ref=e469]: "]"
+          - generic [ref=e471]: "});"
+    - generic [ref=e472]:
+      - link "Previous Gas Fees" [ref=e473] [cursor=pointer]:
+        - /url: /agents/invoking-agents/gas-fees
+        - generic [ref=e474]:
+          - generic [ref=e475]: Previous
+          - generic [ref=e476]: Gas Fees
+        - img [ref=e477]
+      - link "Next LLM Inference" [ref=e479] [cursor=pointer]:
+        - /url: /agents/base-agents/llm-inference
+        - generic [ref=e480]:
+          - generic [ref=e481]: Next
+          - generic [ref=e482]: LLM Inference
+        - img [ref=e483]
+    - paragraph [ref=e486]:
+      - text: Last updated
+      - time [ref=e487]: 4 months ago
+  - alert [ref=e488]

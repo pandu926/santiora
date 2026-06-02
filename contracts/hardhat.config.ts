@@ -10,7 +10,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       { version: "0.8.24", settings: { viaIR: true, evmVersion: "paris", optimizer: { enabled: true, runs: 200 } } },
-      { version: "0.8.30", settings: { viaIR: true, evmVersion: "paris", optimizer: { enabled: true, runs: 200 } } },
+      { version: "0.8.30", settings: { viaIR: true, evmVersion: "paris", optimizer: { enabled: true, runs: 1 } } },
     ],
   },
   paths: { sources: "./src", scripts: "./scripts", tests: "./test" },

@@ -1,0 +1,478 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - button "Open table of contents" [ref=e7] [cursor=pointer]:
+          - img [ref=e8]
+        - link "Logo" [ref=e10] [cursor=pointer]:
+          - /url: /
+          - img "Logo" [ref=e11]
+      - generic [ref=e13]:
+        - generic [ref=e15]:
+          - img [ref=e17]
+          - textbox "Ask or search" [ref=e19]:
+            - /placeholder: Ask or search…
+          - generic [ref=e21]:
+            - generic [ref=e23]: Ctrl
+            - generic [ref=e24]: k
+        - alert [ref=e25]
+      - generic [ref=e26]:
+        - link "Developer Discord" [ref=e27] [cursor=pointer]:
+          - /url: http://discord.gg/Somnia
+          - generic [ref=e28]: Developer Discord
+        - button "More" [ref=e30] [cursor=pointer]:
+          - generic [ref=e31]: More
+          - img [ref=e32]
+          - img [ref=e34]
+    - navigation "Main" [ref=e37]:
+      - generic [ref=e38]:
+        - list "Sections" [ref=e41]:
+          - listitem [ref=e42]:
+            - link "Documentation" [ref=e43] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e44]: Documentation
+          - listitem [ref=e45]:
+            - link "Concepts" [ref=e46] [cursor=pointer]:
+              - /url: /concepts
+              - generic [ref=e47]: Concepts
+          - listitem [ref=e48]:
+            - link "Agents" [ref=e49] [cursor=pointer]:
+              - /url: /agents
+              - generic [ref=e50]: Agents
+        - button "Scroll back":
+          - img
+        - button "Scroll further":
+          - img
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - button "Copy" [ref=e59] [cursor=pointer]:
+            - img [ref=e60]
+            - generic [ref=e62]: Copy
+          - button "More" [ref=e63] [cursor=pointer]:
+            - img [ref=e64]
+        - button "On this page" [ref=e66] [cursor=pointer]:
+          - img [ref=e67]
+      - heading "Overview" [level=1] [ref=e69]
+    - generic [ref=e70]:
+      - note "Information" [ref=e71]:
+        - img [ref=e73]
+        - paragraph [ref=e76]:
+          - strong [ref=e77]: "Prototype Notice:"
+          - text: Somnia Agents is in prototype state and deployed on both
+          - strong [ref=e78]: Somnia Mainnet
+          - text: (chain ID
+          - code [ref=e79]: "5031"
+          - text: ) and
+          - strong [ref=e80]: Somnia Testnet
+          - text: (chain ID
+          - code [ref=e81]: "50312"
+          - text: ). Features and APIs may change as development progresses — see the
+          - link "Quickstart" [ref=e83] [cursor=pointer]:
+            - /url: /agents/invoking-agents/quickstart
+          - text: for current contract addresses and RPC URLs.
+      - heading "Direct link to heading Overview" [level=2] [ref=e84]:
+        - link "Direct link to heading" [ref=e86] [cursor=pointer]:
+          - /url: "#overview"
+          - img [ref=e87]
+        - generic [ref=e89]: Overview
+      - heading "Direct link to heading Vision" [level=3] [ref=e90]:
+        - link "Direct link to heading" [ref=e92] [cursor=pointer]:
+          - /url: "#vision"
+          - img [ref=e93]
+        - generic [ref=e95]: Vision
+      - paragraph [ref=e96]: Smart contracts revolutionized trustless computation, but they operate in isolation. They cannot fetch external data, call APIs, or perform complex computation. Today's solutions require stitching together multiple systems—Chainlink for price feeds, separate oracle networks for weather data, centralized services for AI—each adding counterparty risk and integration complexity.
+      - paragraph [ref=e97]: What if smart contracts could natively access the internet, run AI models, and perform arbitrary computation—all while maintaining blockchain guarantees of decentralization and auditability?
+      - paragraph [ref=e98]: Somnia Agents extend the Somnia blockchain by enabling Smart Contracts and users to trigger decentralized, auditable compute jobs—including LLM-based tasks—executed across Somnia's decentralized network. By integrating with Somnia's native on-chain reactivity, Agents make it possible to build and run fully featured decentralized applications.
+      - heading "Direct link to heading What are Somnia Agents?" [level=3] [ref=e99]:
+        - link "Direct link to heading" [ref=e101] [cursor=pointer]:
+          - /url: "#what-are-somnia-agents"
+          - img [ref=e102]
+        - generic [ref=e104]: What are Somnia Agents?
+      - paragraph [ref=e105]:
+        - text: Somnia Agents function as
+        - strong [ref=e106]: decentralized, sandboxed compute containers
+        - text: . This architecture makes them simple to develop, much like familiar serverless platforms such as AWS Lambda or Google Cloud Run, but with the advantages of blockchain auditability, reactivity, and security.
+      - heading "Direct link to heading Capabilities" [level=4] [ref=e107]:
+        - link "Direct link to heading" [ref=e109] [cursor=pointer]:
+          - /url: "#capabilities"
+          - img [ref=e110]
+        - generic [ref=e112]: Capabilities
+      - paragraph [ref=e113]: "Somnia Agents unlock use cases not possible with traditional EVM Smart Contracts:"
+      - list [ref=e114]:
+        - listitem [ref=e115]:
+          - generic [ref=e117]: •
+          - paragraph [ref=e119]:
+            - strong [ref=e120]: "Acting as Oracles:"
+            - text: Querying the internet and reliably bringing external data on-chain — see
+            - link "JSON API Request" [ref=e122] [cursor=pointer]:
+              - /url: /agents/base-agents/json-api-request
+        - listitem [ref=e123]:
+          - generic [ref=e125]: •
+          - paragraph [ref=e127]:
+            - strong [ref=e128]: "Outbound Communication:"
+            - text: Triggering actions or sending messages to external internet services
+        - listitem [ref=e129]:
+          - generic [ref=e131]: •
+          - paragraph [ref=e133]:
+            - strong [ref=e134]: "LLM Invocation:"
+            - text: Leveraging on-chain deterministic AI models for autonomous agents — see
+            - link "LLM Inference" [ref=e136] [cursor=pointer]:
+              - /url: /agents/base-agents/llm-inference
+            - text: and
+            - link "LLM Parse Website" [ref=e138] [cursor=pointer]:
+              - /url: /agents/base-agents/llm-parse-website
+      - heading "Direct link to heading How Somnia Agents Work" [level=3] [ref=e139]:
+        - link "Direct link to heading" [ref=e141] [cursor=pointer]:
+          - /url: "#how-somnia-agents-work"
+          - img [ref=e142]
+        - generic [ref=e144]: How Somnia Agents Work
+      - iframe [ref=e146]:
+        - document [ref=f4e3]:
+          - generic [ref=f4e5]:
+            - generic [ref=f4e6]:
+              - paragraph [ref=f4e13]: Output
+              - paragraph [ref=f4e20]: Consensus Layer
+              - paragraph [ref=f4e27]: Somnia Decentralized Network
+              - paragraph [ref=f4e34]: User / Smart Contract
+            - generic [ref=f4e46]:
+              - paragraph [ref=f4e52]: "Yes"
+              - paragraph [ref=f4e58]: "Yes"
+              - paragraph [ref=f4e64]: "No"
+            - generic [ref=f4e65]:
+              - paragraph [ref=f4e72]: Invoke Agent
+              - paragraph [ref=f4e79]: Node 1
+              - paragraph [ref=f4e86]: Node 2
+              - paragraph [ref=f4e93]: Node 3
+              - paragraph [ref=f4e100]: Node N...
+              - paragraph [ref=f4e107]: Majority Agreement?
+              - paragraph [ref=f4e114]: Execution Receipt
+              - paragraph [ref=f4e121]: Application Binary Interface (ABI) Response
+              - paragraph [ref=f4e128]: Invalid - Rejected
+      - heading "Direct link to heading Execution" [level=4] [ref=e147]:
+        - link "Direct link to heading" [ref=e149] [cursor=pointer]:
+          - /url: "#execution"
+          - img [ref=e150]
+        - generic [ref=e152]: Execution
+      - paragraph [ref=e153]:
+        - text: When an Agent is invoked, it runs on a
+        - strong [ref=e154]: decentralized subset of the Somnia network nodes
+        - text: . Execution is considered valid only when a majority of nodes reach consensus on the result. Each invocation produces an audit receipt, allowing anyone to retrospectively inspect each step in an Agent execution.
+      - heading "Direct link to heading Deterministic LLMs" [level=4] [ref=e155]:
+        - link "Direct link to heading" [ref=e157] [cursor=pointer]:
+          - /url: "#deterministic-llms"
+          - img [ref=e158]
+        - generic [ref=e160]: Deterministic LLMs
+      - paragraph [ref=e161]:
+        - text: Somnia Agents can invoke large language models (LLMs) that run as part of the validator network. Unlike traditional LLM APIs where outputs vary between calls, Somnia's LLMs use fixed random seeds and controlled temperature parameters to produce
+        - strong [ref=e162]: deterministic outputs
+        - text: —the same input always yields the same output across all validating nodes.
+      - paragraph [ref=e163]: "This determinism enables consensus: when multiple nodes independently run the same LLM inference with identical parameters, they produce identical results, allowing the network to verify and agree on AI-generated outputs."
+      - paragraph [ref=e164]:
+        - text: See
+        - link "LLM Inference" [ref=e166] [cursor=pointer]:
+          - /url: /agents/base-agents/llm-inference
+        - text: for usage details.
+      - heading "Direct link to heading Receipts" [level=4] [ref=e167]:
+        - link "Direct link to heading" [ref=e169] [cursor=pointer]:
+          - /url: "#receipts"
+          - img [ref=e170]
+        - generic [ref=e172]: Receipts
+      - paragraph [ref=e173]:
+        - text: An execution receipt is a
+        - strong [ref=e174]: signed manifest of intermediate computation steps
+        - text: taken within the Agent. This is similar to the logs and manifests used by CI build systems.
+      - paragraph [ref=e175]:
+        - strong [ref=e176]: "Important:"
+        - text: The final
+        - strong [ref=e177]: result
+        - text: is what validators reach consensus on. Receipt steps are
+        - strong [ref=e178]: subjective
+        - text: —they show what one node did to compute the result, which may vary slightly between nodes. This provides transparency without requiring consensus on every intermediate step.
+      - iframe [ref=e180]:
+        - document [ref=f5e3]:
+          - generic [ref=f5e5]:
+            - paragraph [ref=f5e13]: Execution Receipt
+            - generic [ref=f5e14]:
+              - paragraph [ref=f5e21]: "Step 1: Input Received"
+              - paragraph [ref=f5e28]: "Step 2: Processing"
+              - paragraph [ref=f5e35]: "Step 3: External Call"
+              - paragraph [ref=f5e42]: "Step 4: Result Computed"
+              - paragraph [ref=f5e49]: "Step 5: Output Encoded"
+              - paragraph [ref=f5e56]: Signed by Validators
+              - paragraph [ref=f5e63]: On-Chain Audit Trail
+      - paragraph [ref=e181]:
+        - text: See
+        - link "Receipts" [ref=e183] [cursor=pointer]:
+          - /url: /agents/invoking-agents/receipts
+        - text: for viewing and understanding receipts.
+      - heading "Direct link to heading Payment and Gas" [level=4] [ref=e184]:
+        - link "Direct link to heading" [ref=e186] [cursor=pointer]:
+          - /url: "#payment-and-gas"
+          - img [ref=e187]
+        - generic [ref=e189]: Payment and Gas
+      - paragraph [ref=e190]:
+        - text: Invoking an Agent requires
+        - strong [ref=e191]: SOMI
+        - text: (mainnet) or
+        - strong [ref=e192]: STT
+        - text: "(testnet). Users send a deposit when creating a request. The contract splits it into two pots: an"
+        - strong [ref=e193]: operations reserve
+        - text: (
+        - code [ref=e194]: minPerAgentDeposit × subcommitteeSize
+        - text: ) that funds runner gas refunds, callback gas, and keeper payments; and an
+        - strong [ref=e195]: agent reward pot
+        - text: (everything above the reserve) that's split equally and paid to every elected subcommittee member at finalisation. Whatever's left after everything settles is rebated to the requester.
+      - paragraph [ref=e196]:
+        - text: See
+        - link "Gas Fees" [ref=e198] [cursor=pointer]:
+          - /url: /agents/invoking-agents/gas-fees
+        - text: for the full fund-flow diagram and details on sizing deposits.
+      - heading "Direct link to heading EVM-Native Schema" [level=3] [ref=e199]:
+        - link "Direct link to heading" [ref=e201] [cursor=pointer]:
+          - /url: "#evm-native-schema"
+          - img [ref=e202]
+        - generic [ref=e204]: EVM-Native Schema
+      - paragraph [ref=e205]:
+        - text: Somnia Agents are invoked via
+        - strong [ref=e206]: HTTP POST requests
+        - text: ", where both the input data and returned result are ABI-encoded, just like traditional Ethereum smart contract calls."
+      - paragraph [ref=e207]:
+        - text: The interface and schema of each Agent closely follows the
+        - strong [ref=e208]: standard Solidity contract ABI
+        - text: . This means you can use familiar web3 tools—such as viem, Ethers.js, or Solidity's own ABI encoders/decoders—to interact with Agents in exactly the same way you would a smart contract.
+      - paragraph [ref=e209]:
+        - strong [ref=e210]: "Key Benefits:"
+      - list [ref=e211]:
+        - listitem [ref=e212]:
+          - generic [ref=e214]: •
+          - paragraph [ref=e216]: Code reuse with existing smart contract tooling
+        - listitem [ref=e217]:
+          - generic [ref=e219]: •
+          - paragraph [ref=e221]: Seamless integration with developer workflows
+        - listitem [ref=e222]:
+          - generic [ref=e224]: •
+          - paragraph [ref=e226]: Agents feel like native blockchain contracts
+        - listitem [ref=e227]:
+          - generic [ref=e229]: •
+          - paragraph [ref=e231]: Enables richer off-chain compute and connectivity
+      - heading "Direct link to heading Roadmap" [level=3] [ref=e232]:
+        - link "Direct link to heading" [ref=e234] [cursor=pointer]:
+          - /url: "#roadmap"
+          - img [ref=e235]
+        - generic [ref=e237]: Roadmap
+      - iframe [ref=e239]:
+        - document [ref=f6e3]:
+          - generic [ref=f6e9]: Phase 1
+          - generic [ref=f6e15]: Now
+          - generic [ref=f6e21]: Core AgentsAvailable
+          - generic [ref=f6e27]: JSON API Selector
+          - generic [ref=f6e33]: Idempotent Request
+          - generic [ref=f6e39]: AI LLM Invocation
+          - generic [ref=f6e45]: AI Parse Website
+          - generic [ref=f6e51]: Find URL for Topic
+          - generic [ref=f6e57]: Phase 2
+          - generic [ref=f6e63]: "2026"
+          - generic [ref=f6e69]: CustomUser-Defined Agents
+          - generic [ref=f6e75]: Full Agent SDK
+          - generic [ref=f6e81]: Advanced Tooling
+          - generic [ref=f6e82]: Somnia Agents Roadmap
+      - paragraph [ref=e240]: "Agents will roll out in phases:"
+      - paragraph [ref=e241]:
+        - strong [ref=e242]: "Phase 1 (Current):"
+        - text: A curated set of core Agents is available to the ecosystem, covering common use cases like oracles, AI, and external communication.
+      - paragraph [ref=e243]:
+        - strong [ref=e244]: "Phase 2 (2026):"
+        - text: Support for fully custom, user-defined Agents will launch, further expanding Somnia's capabilities.
+      - heading "Direct link to heading Use Cases" [level=3] [ref=e245]:
+        - link "Direct link to heading" [ref=e247] [cursor=pointer]:
+          - /url: "#use-cases"
+          - img [ref=e248]
+        - generic [ref=e250]: Use Cases
+      - heading "Direct link to heading Oracles" [level=4] [ref=e251]:
+        - link "Direct link to heading" [ref=e253] [cursor=pointer]:
+          - /url: "#oracles"
+          - img [ref=e254]
+        - generic [ref=e256]: Oracles
+      - paragraph [ref=e257]:
+        - text: Build on-chain oracles using the
+        - link "JSON API Request" [ref=e259] [cursor=pointer]:
+          - /url: /agents/base-agents/json-api-request
+        - text: "agent:"
+      - list [ref=e260]:
+        - listitem [ref=e261]:
+          - generic [ref=e263]: •
+          - paragraph [ref=e265]: Price feeds from cryptocurrency APIs
+        - listitem [ref=e266]:
+          - generic [ref=e268]: •
+          - paragraph [ref=e270]: Weather data for parametric insurance
+        - listitem [ref=e271]:
+          - generic [ref=e273]: •
+          - paragraph [ref=e275]: Sports scores for prediction markets
+        - listitem [ref=e276]:
+          - generic [ref=e278]: •
+          - paragraph [ref=e280]: Any external API data
+      - heading "Direct link to heading AI Services" [level=4] [ref=e281]:
+        - link "Direct link to heading" [ref=e283] [cursor=pointer]:
+          - /url: "#ai-services"
+          - img [ref=e284]
+        - generic [ref=e286]: AI Services
+      - paragraph [ref=e287]:
+        - text: Leverage deterministic AI with
+        - link "LLM Inference" [ref=e289] [cursor=pointer]:
+          - /url: /agents/base-agents/llm-inference
+        - text: and
+        - link "LLM Parse Website" [ref=e291] [cursor=pointer]:
+          - /url: /agents/base-agents/llm-parse-website
+        - text: ":"
+      - list [ref=e292]:
+        - listitem [ref=e293]:
+          - generic [ref=e295]: •
+          - paragraph [ref=e297]: Text generation and analysis
+        - listitem [ref=e298]:
+          - generic [ref=e300]: •
+          - paragraph [ref=e302]: Content moderation decisions
+        - listitem [ref=e303]:
+          - generic [ref=e305]: •
+          - paragraph [ref=e307]: Dynamic NFT descriptions
+        - listitem [ref=e308]:
+          - generic [ref=e310]: •
+          - paragraph [ref=e312]: Intelligent automation
+      - heading "Direct link to heading Outbound Communication" [level=4] [ref=e313]:
+        - link "Direct link to heading" [ref=e315] [cursor=pointer]:
+          - /url: "#outbound-communication"
+          - img [ref=e316]
+        - generic [ref=e318]: Outbound Communication
+      - list [ref=e319]:
+        - listitem [ref=e320]:
+          - generic [ref=e322]: •
+          - paragraph [ref=e324]: Webhook triggers from smart contracts
+        - listitem [ref=e325]:
+          - generic [ref=e327]: •
+          - paragraph [ref=e329]: Notifications to external systems
+        - listitem [ref=e330]:
+          - generic [ref=e332]: •
+          - paragraph [ref=e334]: Off-chain workflow initiation
+        - listitem [ref=e335]:
+          - generic [ref=e337]: •
+          - paragraph [ref=e339]: Database synchronization
+      - heading "Direct link to heading Data Processing" [level=4] [ref=e340]:
+        - link "Direct link to heading" [ref=e342] [cursor=pointer]:
+          - /url: "#data-processing"
+          - img [ref=e343]
+        - generic [ref=e345]: Data Processing
+      - list [ref=e346]:
+        - listitem [ref=e347]:
+          - generic [ref=e349]: •
+          - paragraph [ref=e351]: JSON extraction and transformation
+        - listitem [ref=e352]:
+          - generic [ref=e354]: •
+          - paragraph [ref=e356]:
+            - text: Web scraping with AI — see
+            - link "LLM Parse Website" [ref=e358] [cursor=pointer]:
+              - /url: /agents/base-agents/llm-parse-website
+        - listitem [ref=e359]:
+          - generic [ref=e361]: •
+          - paragraph [ref=e363]: Data validation and enrichment
+        - listitem [ref=e364]:
+          - generic [ref=e366]: •
+          - paragraph [ref=e368]: Format conversion
+      - heading "Direct link to heading Key Features" [level=3] [ref=e369]:
+        - link "Direct link to heading" [ref=e371] [cursor=pointer]:
+          - /url: "#key-features"
+          - img [ref=e372]
+        - generic [ref=e374]: Key Features
+      - list [ref=e375]:
+        - listitem [ref=e376]:
+          - generic [ref=e378]: •
+          - paragraph [ref=e380]:
+            - strong [ref=e381]: EVM-Native
+            - text: ": Standard Solidity ABI encoding for seamless integration"
+        - listitem [ref=e382]:
+          - generic [ref=e384]: •
+          - paragraph [ref=e386]:
+            - strong [ref=e387]: Decentralized
+            - text: ": No central authority or single point of failure"
+        - listitem [ref=e388]:
+          - generic [ref=e390]: •
+          - paragraph [ref=e392]:
+            - strong [ref=e393]: Auditable
+            - text: ": Every execution produces verifiable receipts"
+        - listitem [ref=e394]:
+          - generic [ref=e396]: •
+          - paragraph [ref=e398]:
+            - strong [ref=e399]: Monetizable
+            - text: ": Agent Runners earn fees from usage"
+        - listitem [ref=e400]:
+          - generic [ref=e402]: •
+          - paragraph [ref=e404]:
+            - strong [ref=e405]: Composable
+            - text: ": Agents can be chained together"
+        - listitem [ref=e406]:
+          - generic [ref=e408]: •
+          - paragraph [ref=e410]:
+            - strong [ref=e411]: Permissionless
+            - text: ": Anyone can invoke agents"
+        - listitem [ref=e412]:
+          - generic [ref=e414]: •
+          - paragraph [ref=e416]:
+            - strong [ref=e417]: Deterministic AI
+            - text: ": On-chain AI with consensus guarantees"
+      - heading "Direct link to heading Next Steps" [level=3] [ref=e418]:
+        - link "Direct link to heading" [ref=e420] [cursor=pointer]:
+          - /url: "#next-steps"
+          - img [ref=e421]
+        - generic [ref=e423]: Next Steps
+      - heading "Direct link to heading Invoking Agents" [level=4] [ref=e424]:
+        - link "Direct link to heading" [ref=e426] [cursor=pointer]:
+          - /url: "#invoking-agents"
+          - img [ref=e427]
+        - generic [ref=e429]: Invoking Agents
+      - list [ref=e430]:
+        - listitem [ref=e431]:
+          - generic [ref=e433]: •
+          - paragraph [ref=e435]:
+            - link "Quickstart" [ref=e437] [cursor=pointer]:
+              - /url: /agents/invoking-agents/quickstart
+            - text: — Start invoking agents
+        - listitem [ref=e438]:
+          - generic [ref=e440]: •
+          - paragraph [ref=e442]:
+            - link "Gas Fees" [ref=e444] [cursor=pointer]:
+              - /url: /agents/invoking-agents/gas-fees
+            - text: — Learn about invocation costs
+      - heading "Direct link to heading Base Agents" [level=4] [ref=e445]:
+        - link "Direct link to heading" [ref=e447] [cursor=pointer]:
+          - /url: "#base-agents"
+          - img [ref=e448]
+        - generic [ref=e450]: Base Agents
+      - list [ref=e451]:
+        - listitem [ref=e452]:
+          - generic [ref=e454]: •
+          - paragraph [ref=e456]:
+            - link "JSON API Request" [ref=e458] [cursor=pointer]:
+              - /url: /agents/base-agents/json-api-request
+            - text: — Fetch data from any JSON API
+        - listitem [ref=e459]:
+          - generic [ref=e461]: •
+          - paragraph [ref=e463]:
+            - link "LLM Inference" [ref=e465] [cursor=pointer]:
+              - /url: /agents/base-agents/llm-inference
+            - text: — Generate text with on-chain AI
+        - listitem [ref=e466]:
+          - generic [ref=e468]: •
+          - paragraph [ref=e470]:
+            - link "LLM Parse Website" [ref=e472] [cursor=pointer]:
+              - /url: /agents/base-agents/llm-parse-website
+            - text: — Extract structured data from websites
+    - link "Next Quickstart" [ref=e474] [cursor=pointer]:
+      - /url: /agents/invoking-agents/quickstart
+      - generic [ref=e475]:
+        - generic [ref=e476]: Next
+        - generic [ref=e477]: Quickstart
+      - img [ref=e478]
+    - paragraph [ref=e481]:
+      - text: Last updated
+      - time [ref=e482]: 1 month ago
+  - alert [ref=e483]

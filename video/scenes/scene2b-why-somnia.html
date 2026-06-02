@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1920px;
+  height: 1080px;
+  background: #09090b;
+  font-family: 'Inter', -apple-system, sans-serif;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  text-align: center;
+  max-width: 1400px;
+}
+
+.badge-top {
+  display: inline-block;
+  padding: 8px 20px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c4b5fd;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 64px;
+  font-weight: 700;
+  color: #fafafa;
+  letter-spacing: -2px;
+  margin-bottom: 16px;
+  line-height: 1.1;
+}
+
+.title span {
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 22px;
+  color: #71717a;
+  margin-bottom: 60px;
+}
+
+.primitives-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 50px;
+}
+
+.primitive-card {
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid rgba(63, 63, 70, 0.5);
+  border-radius: 14px;
+  padding: 28px 24px;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.primitive-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.primitive-card:nth-child(1)::before { background: linear-gradient(90deg, #22d3ee, #06b6d4); }
+.primitive-card:nth-child(2)::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.primitive-card:nth-child(3)::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.primitive-card:nth-child(4)::before { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.primitive-card:nth-child(5)::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.primitive-card:nth-child(6)::before { background: linear-gradient(90deg, #ec4899, #f472b6); }
+
+.primitive-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fafafa;
+  margin-bottom: 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.primitive-what {
+  font-size: 13px;
+  color: #a1a1aa;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.primitive-why {
+  font-size: 11px;
+  color: #ef4444;
+  font-weight: 500;
+  padding: 4px 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.bottom-line {
+  font-size: 18px;
+  color: #a1a1aa;
+}
+
+.bottom-line strong {
+  color: #fafafa;
+  font-weight: 600;
+}
+
+.bg-grid {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1920px; height: 1080px;
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<div class="container">
+  <div class="badge-top">Why This Is Impossible Elsewhere</div>
+
+  <h1 class="title">Only Possible on <span>Somnia Agentic L1</span></h1>
+  <p class="subtitle">Every core feature requires native primitives that no other blockchain provides</p>
+
+  <div class="primitives-grid">
+    <div class="primitive-card">
+      <div class="primitive-name">inferToolsChat</div>
+      <div class="primitive-what">On-chain LLM inference. AI generates markets and resolves outcomes directly in the EVM.</div>
+      <div class="primitive-why">Other chains: off-chain APIs required</div>
+    </div>
+
+    <div class="primitive-card">
+      <div class="primitive-name">scheduleSubscriptionAtBlock</div>
+      <div class="primitive-what">One-shot triggers at specific blocks. Self-rescheduling. Zero idle gas.</div>
+      <div class="primitive-why">Other chains: Chainlink Keepers ($$$)</div>
+    </div>
+
+    <div class="primitive-card">
+      <div class="primitive-name">Native Reactivity</div>
+      <div class="primitive-what">Validator-guaranteed callbacks. No external relayer network needed.</div>
+      <div class="primitive-why">Other chains: Gelato / custom servers</div>
+    </div>
+
+    <div class="primitive-card">
+      <div class="primitive-name">Agent Platform</div>
+      <div class="primitive-what">Multi-agent orchestration on-chain. Agents call other agents natively.</div>
+      <div class="primitive-why">Other chains: cannot coordinate agents</div>
+    </div>
+
+    <div class="primitive-card">
+      <div class="primitive-name">400ms Finality</div>
+      <div class="primitive-what">Sub-second block time enables real-time market operations and rapid resolution.</div>
+      <div class="primitive-why">Ethereum: 12s blocks, too slow</div>
+    </div>
+
+    <div class="primitive-card">
+      <div class="primitive-name">Agent-to-Agent Verification</div>
+      <div class="primitive-what">Multiple AI agents cross-check each other on-chain for trustless consensus.</div>
+      <div class="primitive-why">Other chains: single oracle, single failure</div>
+    </div>
+  </div>
+
+  <p class="bottom-line">
+    <strong>On Ethereum</strong> you'd need: Chainlink + off-chain AI APIs + UMA oracle + a server running 24/7.<br>
+    <strong>On Somnia</strong> everything runs natively at the validator level. Zero external dependencies.
+  </p>
+</div>
+</body>
+</html>
