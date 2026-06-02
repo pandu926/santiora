@@ -172,7 +172,7 @@ contract SantioraV3Creator {
             marketId,
             REQ_CREATE,
             this.onCreate.selector,
-            "Create a YES/NO prediction market question. CRITICAL: Use the 'now' unix timestamp provided in this system message as the current time. Question MUST reference a FUTURE date (use now + deadline_hours seconds, format as 'by [date] UTC'). NEVER use past dates. Reply ONLY valid JSON: {\"question\":\"...\",\"odds\":50,\"deadline_hours\":48}. Keep deadline_hours between 24 and 168.",
+            "Create a YES/NO prediction market that is GENUINELY UNCERTAIN. The user message contains the CURRENT real-world value. Rules: (1) For price/numeric thresholds, your threshold MUST be within 5 to 15 percent of the current value. NEVER use absurd thresholds (e.g. current BTC=$95000, do NOT ask 'BTC > $20000' -- that is obviously YES). (2) Question MUST reference a FUTURE date (current time + deadline_hours hours, format 'by [date] UTC'). (3) odds MUST reflect realistic probability between 35-65 (truly uncertain). If you cannot make it uncertain, return question with the word SKIP. Reply ONLY valid JSON: {\"question\":\"...\",\"odds\":50,\"deadline_hours\":48}. Keep deadline_hours between 24 and 168.",
             string.concat("Category: ", draft.category, ". Current data value: ", draft.data, ". Avoid duplicating: ", _recent())
         );
     }
@@ -183,7 +183,7 @@ contract SantioraV3Creator {
             marketId,
             REQ_QUALITY,
             this.onQuality.selector,
-            "Quality check this prediction market question. Is it specific, verifiable, time-bound, and interesting? Reply ONLY valid JSON: {\"approved\":true,\"reason\":\"...\",\"improved_question\":\"...\"}. Approve if reasonably good. Only reject if fundamentally flawed.",
+            "Quality check this prediction market. REJECT (approved:false) if ANY of: (a) threshold is obviously certain given current data (e.g. asking 'BTC > $20000' when current price is $95000), (b) outcome already resolvable today, (c) threshold differs more than 30% from current data value, (d) question contains the word SKIP, (e) not specific/verifiable/time-bound. APPROVE only if outcome is genuinely uncertain at current data. Reply ONLY valid JSON: {\"approved\":true,\"reason\":\"...\",\"improved_question\":\"...\"}.",
             string.concat("Question: ", draft.question, ". Source data: ", draft.data, ". Existing markets: ", _recent())
         );
     }
@@ -264,7 +264,7 @@ contract SantioraV3Creator {
 
     function _fallbackSource(string memory category, uint256 retryCount) internal pure returns (string memory, string memory) {
         if (_same(category, "sports")) return _sportsSource(retryCount % 3);
-        if (_same(category, "crypto")) return ("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,cardano&vs_currencies=usd&include_24hr_change=true", "ethereum.usd");
+        if (_same(category, "crypto")) return _cryptoSource(retryCount % 4);
         if (_same(category, "technology") || _same(category, "tech")) return ("https://api.github.com/search/repositories?q=topic:ai&sort=updated&order=desc&per_page=3", "items[0].full_name");
         if (_same(category, "finance")) return ("https://open.er-api.com/v6/latest/EUR", "rates.USD");
         return _sportsSource(retryCount % 3);
