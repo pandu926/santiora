@@ -10,6 +10,7 @@ interface IMarketRegistryV2Lite {
 
 interface ISantioraV3Creator {
     function startCreate(uint256 marketId, string calldata category) external;
+    function minBalanceForCreate() external view returns (uint256);
 }
 
 interface ISantioraV3Resolver {
@@ -134,6 +135,10 @@ contract SantioraFinalV3 {
     }
 
     function createMarket(string calldata category) external onlyAuthorized returns (uint256 marketId) {
+        return _createMarket(category);
+    }
+
+    function _createMarket(string memory category) internal returns (uint256 marketId) {
         require(creatorModule != address(0), "Creator unset");
         _resetDayIfNeeded();
         (bool allowed, string memory reason) = _canCreate(category);
@@ -244,11 +249,14 @@ contract SantioraFinalV3 {
         emit PipelineFailed(marketId, reason);
     }
 
-    function _canCreate(string calldata category) internal view returns (bool, string memory) {
+    function _canCreate(string memory category) internal view returns (bool, string memory) {
         if (block.timestamp < rulesState.lastScanTimestamp + rules.scanInterval) return (false, "interval");
         uint256 today = block.timestamp >= rulesState.dayStartTimestamp + 1 days ? 0 : rulesState.marketsCreatedToday;
         if (today >= rules.maxMarketsPerDay) return (false, "daily_limit");
         if (!registry.hasTopicCapacity(category)) return (false, "topic_limit");
+        if (creatorModule == address(0)) return (false, "creator_unset");
+        uint256 needed = ISantioraV3Creator(creatorModule).minBalanceForCreate();
+        if (creatorModule.balance < needed) return (false, "creator_underfunded");
         return (true, "ready");
     }
 
@@ -296,6 +304,20 @@ contract SantioraFinalV3 {
 
     function canCreateMarket(string calldata category) external view returns (bool allowed, string memory reason) {
         return _canCreate(category);
+    }
+
+    /// @notice Reactive-compatible no-arg overload — V2 ABI parity.
+    /// @dev Reactive precompile calls `canCreateMarket()` without args; resolves against the next category.
+    function canCreateMarket() external view returns (bool allowed, string memory reason) {
+        string memory cat = categories[performance.totalCreated % categories.length];
+        return _canCreate(cat);
+    }
+
+    /// @notice Reactive-compatible no-arg overload — V2 ABI parity.
+    /// @dev Reactive precompile calls `createMarket()` without args; routes to the next category.
+    function createMarket() external onlyAuthorized returns (uint256 marketId) {
+        string memory cat = categories[performance.totalCreated % categories.length];
+        return _createMarket(cat);
     }
 
     function getMarket(uint256 id) external view returns (string memory question, uint256 odds, uint256 deadline, string memory category, uint8 status, string memory outcome, uint256 confidence, string memory data) {

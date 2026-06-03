@@ -80,6 +80,12 @@ contract SantioraV3Creator {
 
     receive() external payable {}
 
+    /// @notice Minimum balance required for one full create round: 1 JSON fetch + 2 LLM calls (create + quality).
+    /// @dev Coordinator MUST gate _canCreate on (address(creatorModule).balance >= minBalanceForCreate()).
+    function minBalanceForCreate() external pure returns (uint256) {
+        return JSON_DEPOSIT + LLM_DEPOSIT + LLM_DEPOSIT;
+    }
+
     function configure(uint256 nextMaxRetry, uint256 nextMinDuration, uint256 nextMaxDuration) external onlyOwner {
         maxRetry = nextMaxRetry;
         minDuration = nextMinDuration;
@@ -292,12 +298,18 @@ contract SantioraV3Creator {
 
     function _jsonString(string memory json, string memory key) internal pure returns (string memory) {
         bytes memory data = bytes(json);
-        bytes memory needle = bytes(string.concat('"', key, '":"'));
+        bytes memory needle = bytes(string.concat('"', key, '":'));
         uint256 start = _find(data, needle);
         if (start == type(uint256).max) return "";
         start += needle.length;
+        while (start < data.length && (data[start] == ' ' || data[start] == '\t' || data[start] == '\n' || data[start] == '\r')) start++;
+        if (start >= data.length || data[start] != '"') return "";
+        start++;
         uint256 end = start;
-        while (end < data.length && data[end] != '"') end++;
+        while (end < data.length && data[end] != '"') {
+            if (data[end] == '\\' && end + 1 < data.length) end++;
+            end++;
+        }
         return _slice(data, start, end);
     }
 
