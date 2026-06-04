@@ -5,7 +5,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchFinalV2Stats, fetchReactiveV2Stats, FinalV2Stats, ReactiveV2Stats, SANTIORA_FINAL_V3, SANTIORA_V3_CREATOR, SANTIORA_V3_RESOLVER, SANTIORA_REACTIVE_V2, MARKET_REGISTRY } from "@/lib/onchain";
+import { fetchFinalV2Stats, fetchReactiveV2Stats, FinalV2Stats, ReactiveV2Stats, SANTIORA_V4, SANTIORA_REACTIVE_V4, MARKET_REGISTRY } from "@/lib/onchain";
 import { CONTRACTS } from "@/lib/config";
 
 const EXPLORER = "https://shannon-explorer.somnia.network";
@@ -110,11 +110,11 @@ export default function AIPage() {
           <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-600 border-green-500/20">ACTIVE</Badge>
         </div>
         <div className="flex items-center justify-center min-w-[600px]">
-          <PipelineStep label="ReactiveV2" value={r.createFires + r.resolveFires} active pulse />
+          <PipelineStep label="ReactiveV4" value={r.createFires + r.resolveFires} active pulse />
           <PipelineArrow />
           <PipelineStep label="Schedule" value={r.createFires} active={r.createFires > 0} />
           <PipelineArrow />
-          <PipelineStep label="FinalV2" value={f.totalMarkets} active />
+          <PipelineStep label="SantioraV4" value={f.totalMarkets} active />
           <PipelineArrow />
           <PipelineStep label="inferToolsChat" value={f.totalCreated} active={f.totalCreated > 0} pulse />
           <PipelineArrow />
@@ -150,7 +150,7 @@ export default function AIPage() {
         <StatCard label="Failed" value={f.totalFailed} sub="with retry" />
         <StatCard label="Today Created" value={`${f.todayCount}/${f.maxMarketsPerDay}`} sub="daily limit" />
         <StatCard label="Scan Interval" value={`${f.scanInterval / 60}m`} sub="between creates" />
-        <StatCard label="Last Create" value={r.lastCreateBlock > 0 ? `#${(r.lastCreateBlock / 1000000).toFixed(1)}M` : "pending"} sub="ReactiveV2" />
+        <StatCard label="Last Create" value={r.lastCreateBlock > 0 ? `#${(r.lastCreateBlock / 1000000).toFixed(1)}M` : "pending"} sub="ReactiveV4" />
       </div>
 
       {/* Rules Engine */}
@@ -182,10 +182,8 @@ export default function AIPage() {
           <h3 className="text-xs font-semibold">Deployed Contracts (Somnia Testnet)</h3>
         </div>
         <div className="divide-y divide-border/50">
-          <ContractRow name="SantioraFinalV3 (Coordinator)" address={SANTIORA_FINAL_V3} detail={`${Number(f.balance).toFixed(2)} STT`} />
-          <ContractRow name="SantioraV3Creator" address={SANTIORA_V3_CREATOR} detail="Creation pipeline" />
-          <ContractRow name="SantioraV3Resolver" address={SANTIORA_V3_RESOLVER} detail="Resolution pipeline" />
-          <ContractRow name="SantioraReactiveV2" address={SANTIORA_REACTIVE_V2} detail={`${r.createFires + r.resolveFires} fires`} />
+          <ContractRow name="SantioraV4 (Deep Research)" address={SANTIORA_V4} detail={`${Number(f.balance).toFixed(2)} STT`} />
+          <ContractRow name="SantioraReactiveV4" address={SANTIORA_REACTIVE_V4} detail={`${r.createFires + r.resolveFires} fires`} />
           <ContractRow name="MarketRegistryV2" address={MARKET_REGISTRY} detail={`${f.totalMarkets} markets`} />
           <ContractRow name="Agent Platform" address={CONTRACTS.PLATFORM} detail="Proxy → 0xc49e..." />
           <ContractRow name="LLM Agent" address="12847293847561029384" detail="Qwen3-30B | inferToolsChat" />

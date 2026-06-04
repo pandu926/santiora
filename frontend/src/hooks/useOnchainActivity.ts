@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPublicClient, http, type Address, type Log, decodeAbiParameters } from "viem";
 import { CONTRACTS } from "@/lib/config";
-import { SANTIORA_REACTIVE_V2, SANTIORA_FINAL_V3, MARKET_REGISTRY } from "@/lib/onchain";
+import { SANTIORA_REACTIVE_V4, SANTIORA_V4, MARKET_REGISTRY } from "@/lib/onchain";
 
 const RPC_URL = "https://dream-rpc.somnia.network";
 const POLL_INTERVAL = 15000;
@@ -24,21 +24,22 @@ const REACTIVE_TOPICS: Record<string, { type: OnchainActivity["type"]; title: st
   "0xa194c386d94467d30c3936073d0353e173a265d987687e5b85fe9d848768b9d6": { type: "create", title: "Create Loop Fired" },
   "0xa16e8248472587d0e53f0034cd17dae545f1adfebe7d0d40815a6dd807df529b": { type: "skip", title: "Create Skipped" },
   "0xef1dde8cb6b8e8919807264eb462e38357dad5b906e10ecc1f2e9d2f09c897cd": { type: "resolve", title: "Resolve Loop Fired" },
+  "0x2ec58fcac54e435c792cafd031489240f2698d3cac500a2eb629752f5e91b795": { type: "skip", title: "Resolve Skipped" },
   "0xed6284157dc881b9863a00a34931271f0ea51fd3309b4659f74fa4227a1e7fb0": { type: "schedule", title: "Next Trigger Scheduled" },
+  "0xd73f748f60994ef1532de9ecdd0fed0d80a64263e8127a4cc445862d51ff07ee": { type: "schedule", title: "Loop Started" },
+  "0xb762b402a252be1ed76205bab64c5b590c6d878da487bfe332f136b669814858": { type: "system", title: "Loop Reset" },
 };
 
 const FINAL_TOPICS: Record<string, { type: OnchainActivity["type"]; title: string }> = {
-  "0xd7421b46dbf47b8800000000000000000000000000000000000000000000000000": { type: "agent", title: "Agent Request Sent" },
-  "0x4780b74db45b2a5b00000000000000000000000000000000000000000000000000": { type: "agent", title: "Scan Started" },
-  "0xf6af599a778ddc5300000000000000000000000000000000000000000000000000": { type: "agent", title: "Brain Response Received" },
-  "0x7b83582000000000000000000000000000000000000000000000000000000000": { type: "agent", title: "LLM Decision Made" },
-  "0x6045a112961c320200000000000000000000000000000000000000000000000000": { type: "market", title: "Market Event" },
-  "0x691c547977213cb600000000000000000000000000000000000000000000000000": { type: "market", title: "Market Registered" },
-  "0x304bfec5815d6f8800000000000000000000000000000000000000000000000000": { type: "system", title: "Status Updated" },
-  "0xc457a61fea4b8b5c00000000000000000000000000000000000000000000000000": { type: "agent", title: "Agent Callback" },
-  "0x1a033cbe1e02984e00000000000000000000000000000000000000000000000000": { type: "resolve", title: "Resolution Triggered" },
-  "0x461a044b1f9e1eca00000000000000000000000000000000000000000000000000": { type: "resolve", title: "Market Resolved" },
-  "0x0b6ee4ec713a0dfd00000000000000000000000000000000000000000000000000": { type: "system", title: "Config Updated" },
+  "0x4780b74db45b2a5bfcf6c4f1897cc472cd677b7120711da6f43128ffefce0fb1": { type: "agent", title: "Market Creating" },
+  "0x7b835820df96a4537e416ab6f587d161ff20f648a4105a243a0df0a222f06ada": { type: "market", title: "Market Active" },
+  "0x304bfec5815d6f8897c4f046843c96f3955af24088c0ebceceeccb0cc50fc2fe": { type: "resolve", title: "Market Resolving" },
+  "0x6f5d41f2a76d7bf6042360cc32e79d73794e0da4726370ae55bfc6470d6f1759": { type: "resolve", title: "Market Resolved" },
+  "0x0b6ee4ec713a0dfdaeac59e6ef793f44e6f921cc94219e9ebe28f32bdfe199d4": { type: "system", title: "Pipeline Failed" },
+  "0x56cc21ba6112d780516c0a2b971cae9dce8703614ae89c8248c27024c72e28ca": { type: "agent", title: "Data Gathered" },
+  "0x4854fdd5dc9918c439eb840d183210894a4dde0d14c1d79fc2235e1ab8226a33": { type: "agent", title: "Vote Result" },
+  "0x975f10e26810671d20a79f3189d8dc0fcdeebc277324b16a3d76b15409eb136e": { type: "agent", title: "Research Loop" },
+  "0x9454b637a22b3e97352b407d8a04eb79b5ff2430ccc36a2785d222aa3e5d7e59": { type: "agent", title: "Decision" },
 };
 
 function matchTopic(topic: string, map: Record<string, { type: OnchainActivity["type"]; title: string }>): { type: OnchainActivity["type"]; title: string } | null {
@@ -75,66 +76,25 @@ function decodeReactiveLog(log: Log): OnchainActivity | null {
 
 function decodeFinalLog(log: Log): OnchainActivity | null {
   const topic0 = log.topics[0] || "";
-  const prefix = topic0.slice(0, 18);
+  const match = matchTopic(topic0, FINAL_TOPICS);
+  if (!match) return null;
 
   const bn = Number(log.blockNumber);
   const txHash = log.transactionHash || undefined;
   const id = `f-${bn}-${log.logIndex}`;
 
-  let type: OnchainActivity["type"] = "system";
-  let title = "FinalV2 Event";
   let detail = `Block #${bn}`;
+  if (match.title === "Market Creating") detail = `Block #${bn} — AI pipeline started for new market`;
+  else if (match.title === "Market Active") detail = `Block #${bn} — market live with odds`;
+  else if (match.title === "Market Resolving") detail = `Block #${bn} — resolution pipeline started`;
+  else if (match.title === "Market Resolved") detail = `Block #${bn} — outcome determined by AI`;
+  else if (match.title === "Pipeline Failed") detail = `Block #${bn} — pipeline failed, will retry`;
+  else if (match.title === "Data Gathered") detail = `Block #${bn} — data fetched from source`;
+  else if (match.title === "Vote Result") detail = `Block #${bn} — AI quorum vote completed`;
+  else if (match.title === "Research Loop") detail = `Block #${bn} — deep research round started`;
+  else if (match.title === "Decision") detail = `Block #${bn} — AI decision made`;
 
-  switch (prefix) {
-    case "0xd7421b46dbf47b88":
-      type = "agent"; title = "Agent Request Created";
-      detail = `Block #${bn} — inferToolsChat call to LLM agent`;
-      break;
-    case "0x4780b74db45b2a5b":
-      type = "agent"; title = "Market Scan Started";
-      detail = `Block #${bn} — AI brain scanning for opportunities`;
-      break;
-    case "0xf6af599a778ddc53":
-      type = "agent"; title = "Brain Response";
-      detail = `Block #${bn} — LLM returned market parameters`;
-      break;
-    case "0x7b835820df96a453":
-      type = "agent"; title = "LLM Decision";
-      detail = `Block #${bn} — AI processed creation/resolution logic`;
-      break;
-    case "0x6045a112961c3202":
-      type = "market"; title = "Market Created";
-      detail = `Block #${bn} — new prediction market deployed`;
-      break;
-    case "0x691c547977213cb6":
-      type = "market"; title = "Market Registered";
-      detail = `Block #${bn} — added to MarketRegistry`;
-      break;
-    case "0x304bfec5815d6f88":
-      type = "system"; title = "Status Change";
-      detail = `Block #${bn} — market status updated`;
-      break;
-    case "0xc457a61fea4b8b5c":
-      type = "agent"; title = "Agent Callback";
-      detail = `Block #${bn} — platform delivered agent response`;
-      break;
-    case "0x1a033cbe1e02984e":
-      type = "resolve"; title = "Resolution Started";
-      detail = `Block #${bn} — auto-resolve triggered for expired market`;
-      break;
-    case "0x461a044b1f9e1eca":
-      type = "resolve"; title = "Market Resolved";
-      detail = `Block #${bn} — outcome determined by AI consensus`;
-      break;
-    case "0x0b6ee4ec713a0dfd":
-      type = "system"; title = "Config Updated";
-      detail = `Block #${bn} — rules engine parameters changed`;
-      break;
-    default:
-      return null;
-  }
-
-  return { id, type, title, detail, timestamp: 0, txHash, blockNumber: bn };
+  return { id, type: match.type, title: match.title, detail, timestamp: 0, txHash, blockNumber: bn };
 }
 
 async function getLogsChunked(
@@ -163,8 +123,8 @@ export function useOnchainActivity(limit: number = 50) {
   const fetchLogs = useCallback(async (fromBlock: bigint, toBlock: bigint) => {
     const client = clientRef.current;
     const [rLogs, fLogs] = await Promise.allSettled([
-      getLogsChunked(client, SANTIORA_REACTIVE_V2 as Address, fromBlock, toBlock),
-      getLogsChunked(client, SANTIORA_FINAL_V3 as Address, fromBlock, toBlock),
+      getLogsChunked(client, SANTIORA_REACTIVE_V4 as Address, fromBlock, toBlock),
+      getLogsChunked(client, SANTIORA_V4 as Address, fromBlock, toBlock),
     ]);
 
     const items: OnchainActivity[] = [];

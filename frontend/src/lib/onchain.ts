@@ -7,6 +7,8 @@ export const publicClient = createPublicClient({
   transport: http(),
 });
 
+export const SANTIORA_V4 = "0xbc2455C2D2d75B70ee97AcDC87da11f6FEd301F3" as const;
+export const SANTIORA_REACTIVE_V4 = "0x37AF1d85c551D294671c8B6BAFEc1c7dd3cF77aC" as const;
 export const SANTIORA_FINAL = "0x41054123916e5840ab5a3846921eaa6343f3Fd55" as const;
 export const SANTIORA_FINAL_V2 = "0x699924676bcea563a3171c916a01a4ccafb63ee8" as const;
 export const SANTIORA_FINAL_V3 = "0x9f2DEA7F47bCBec086F1a5fe7c4d909424e8A18B" as const;
@@ -286,7 +288,7 @@ export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
 
   try {
     const statsResult = await publicClient.readContract({
-      address: SANTIORA_FINAL_V3 as Address,
+      address: SANTIORA_V4 as Address,
       abi: FINALV2_ABI,
       functionName: "getStats",
     });
@@ -309,7 +311,7 @@ export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
 
   try {
     const rulesStateResult = await publicClient.readContract({
-      address: SANTIORA_FINAL_V3 as Address,
+      address: SANTIORA_V4 as Address,
       abi: FINALV2_ABI,
       functionName: "getRulesState",
     });
@@ -319,7 +321,7 @@ export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
 
   try {
     const rulesResult = await publicClient.readContract({
-      address: SANTIORA_FINAL_V3 as Address,
+      address: SANTIORA_V4 as Address,
       abi: FINALV2_ABI,
       functionName: "rules",
     });
@@ -333,7 +335,7 @@ export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
 export async function fetchReactiveV2Stats(): Promise<ReactiveV2Stats> {
   try {
     const result = await publicClient.readContract({
-      address: SANTIORA_REACTIVE_V2 as Address,
+      address: SANTIORA_REACTIVE_V4 as Address,
       abi: REACTIVEV2_ABI,
       functionName: "getStats",
     });
