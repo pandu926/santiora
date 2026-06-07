@@ -114,14 +114,13 @@ frontend/test-results/
 frontend/tsconfig.tsbuildinfo
 
 # ═══════════════════════════════════════════════════════════════
-# PLAYWRIGHT SNAPSHOTS (internal dev tooling)
+# VIDEO / MEDIA (too large for git, share via Drive/YouTube)
 # ═══════════════════════════════════════════════════════════════
-.playwright-mcp/
-*.png
-*.jpg
-*.jpeg
-!frontend/public/*.png
-!frontend/public/*.jpg
+video/
+*.mp4
+*.webm
+*.mov
+*.avi
 
 # ═══════════════════════════════════════════════════════════════
 # CLAUDE / AI TOOLING (internal dev workflow)
