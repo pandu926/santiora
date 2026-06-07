@@ -90,6 +90,20 @@ contracts/scripts/retune-interval.ts
 # INTERNAL AUDIT / DEBUG FILES
 # ═══════════════════════════════════════════════════════════════
 contracts/AUDIT-V3.md
+contracts/scripts/test-*.ts
+contracts/scripts/tmp-*.ts
+contracts/scripts/run-*.ts
+contracts/scripts/decode-*.ts
+contracts/scripts/diagnose-*.ts
+contracts/scripts/deploy-debug-*.ts
+contracts/scripts/deploy-reactive-v4.ts
+contracts/scripts/deploy-v5-production.ts
+contracts/scripts/restart-reactive.ts
+contracts/scripts/start-loops.ts
+contracts/scripts/start-reactive-loops.ts
+contracts/scripts/wire-reactive-v4.ts
+contracts/scripts/withdraw-v4.ts
+frontend/INTEGRATION-GAPS.md
 
 # ═══════════════════════════════════════════════════════════════
 # FRONTEND BUILD OUTPUT
