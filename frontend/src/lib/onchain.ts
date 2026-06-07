@@ -1,37 +1,21 @@
 import { createPublicClient, http, formatUnits, type Address } from "viem";
 import { somniaTestnet } from "./config";
-import { PREDICTION_MARKET_SUSD_ABI, SHARE_TOKEN_ABI, SUSD_ABI } from "./contracts";
 
 export const publicClient = createPublicClient({
   chain: somniaTestnet,
   transport: http(),
 });
 
-export const SANTIORA_V4 = "0xbc2455C2D2d75B70ee97AcDC87da11f6FEd301F3" as const;
-export const SANTIORA_REACTIVE_V4 = "0x37AF1d85c551D294671c8B6BAFEc1c7dd3cF77aC" as const;
-export const SANTIORA_FINAL = "0x41054123916e5840ab5a3846921eaa6343f3Fd55" as const;
-export const SANTIORA_FINAL_V2 = "0x699924676bcea563a3171c916a01a4ccafb63ee8" as const;
-export const SANTIORA_FINAL_V3 = "0x9f2DEA7F47bCBec086F1a5fe7c4d909424e8A18B" as const;
-export const SANTIORA_V3_CREATOR = "0xE53387e3187147530F6C0C1faFd17066dF63B22E" as const;
-export const SANTIORA_V3_RESOLVER = "0xA4DC6742B061Cafc7847D7A6c285CDf2Ffcbb324" as const;
-export const SANTIORA_REACTIVE = "0xf9032d080dEBD904e04505B91357353c10b2B39D" as const;
-export const SANTIORA_REACTIVE_V2 = "0x9a907ccbf539fe98f76f913d6d8c65190b75d248" as const;
-export const MARKET_REGISTRY = "0xd68d350D6eedE5DbABCd658EBA009583FF28A46B" as const;
-export const MARKET_REGISTRY_V1 = "0x9e59B7016E3Bc6650d8fb074A58F30C03Fa50677" as const;
+// V5 Production — single source of truth
+export const SANTIORA_V5 = "0x9dca8a2c8dE29F0c8432F0342E411e56f10Bc9a8" as const;
+export const SANTIORA_V5_PROMPTS = "0xb344711637890fd11c92C61a730Bd80bA669b881" as const;
 
-const REGISTRY_ABI = [
-  { type: "function", name: "getMarket", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }, { type: "string" }, { type: "uint256" }, { type: "uint256" }, { type: "string" }, { type: "uint8" }, { type: "string" }, { type: "uint256" }, { type: "bool" }], stateMutability: "view" },
-  { type: "function", name: "getMarketCount", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
-  { type: "function", name: "getActiveCount", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
-  { type: "function", name: "getResolvedCount", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
-] as const;
-
-const REACTIVE_ABI = [
-  { type: "function", name: "getStats", inputs: [], outputs: [{ type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }], stateMutability: "view" },
-] as const;
-
-// Legacy export for backward compatibility — data now comes from MarketRegistry on-chain
+// Legacy — kept for backward compat with other pages, no longer primary
 export const DEPLOYED_MARKETS: readonly { address: string; question: string; category: string; yesPercent: number; deadline: number }[] = [];
+
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
 
 export interface OnchainMarket {
   address: Address;
@@ -48,154 +32,24 @@ export interface OnchainMarket {
   volume: string;
 }
 
-export async function fetchAllMarkets(): Promise<OnchainMarket[]> {
-  try {
-    const countResult = await publicClient.readContract({
-      address: MARKET_REGISTRY as Address,
-      abi: REGISTRY_ABI,
-      functionName: "getMarketCount",
-    });
-    const count = Number(countResult);
-    if (count === 0) return [];
-
-    const markets: OnchainMarket[] = [];
-    const batchSize = 5;
-    for (let start = 0; start < count; start += batchSize) {
-      const end = Math.min(start + batchSize, count);
-      const batch = await Promise.allSettled(
-        Array.from({ length: end - start }, (_, i) =>
-          publicClient.readContract({
-            address: MARKET_REGISTRY as Address,
-            abi: REGISTRY_ABI,
-            functionName: "getMarket",
-            args: [BigInt(start + i)],
-          })
-        )
-      );
-      for (const result of batch) {
-        if (result.status === "fulfilled") {
-          const [marketAddress, rawQuestion, odds, deadline, rawCategory, status, outcome, confidence, isSUSD] =
-            result.value as [Address, string, bigint, bigint, string, number, string, bigint, boolean];
-          let question = rawQuestion || "Market";
-          let category = rawCategory || "general";
-          if (question.startsWith("{")) {
-            try {
-              const parsed = JSON.parse(question);
-              question = parsed.question || question;
-              category = parsed.category || category;
-            } catch {}
-          }
-          markets.push({
-            address: marketAddress,
-            question,
-            category,
-            deadline: Number(deadline),
-            status: Number(status),
-            outcome: outcome === "YES",
-            totalCollateral: 0n,
-            yesSupply: 0n,
-            noSupply: 0n,
-            resolutionConfidence: Number(confidence),
-            yesPercent: Number(odds),
-            volume: isSUSD ? "500" : "0",
-          });
-        }
-      }
-    }
-    return markets;
-  } catch {
-    return [];
-  }
+export interface V5Market {
+  id: number;
+  question: string;
+  odds: number;
+  deadline: number;
+  category: string;
+  status: number;
+  outcome: string;
+  confidence: number;
+  createdAt: number;
+  sourceUrl: string;
 }
 
-export async function fetchMarketDetail(address: Address): Promise<OnchainMarket | null> {
-  const allMarkets = await fetchAllMarkets();
-  const market = allMarkets.find((m) => m.address.toLowerCase() === address.toLowerCase());
-  if (market) return market;
-
-  try {
-    const [infoResult, confResult] = await Promise.allSettled([
-      publicClient.readContract({ address, abi: PREDICTION_MARKET_SUSD_ABI, functionName: "getMarketInfo" }),
-      publicClient.readContract({ address, abi: PREDICTION_MARKET_SUSD_ABI, functionName: "resolutionConfidence" }),
-    ]);
-
-    if (infoResult.status === "rejected") return null;
-
-    const [question, deadline, status, outcome, totalCollateral, yesSupply, noSupply] =
-      infoResult.value as [string, bigint, number, boolean, bigint, bigint, bigint];
-
-    const confidence = confResult.status === "fulfilled" ? Number(confResult.value) : 0;
-    const total = yesSupply + noSupply;
-    const yesPercent = total > 0n ? Number((yesSupply * 100n) / total) : 50;
-    const volume = formatUnits(totalCollateral, 18);
-
-    return {
-      address,
-      question,
-      category: "general",
-      deadline: Number(deadline),
-      status: Number(status),
-      outcome,
-      totalCollateral,
-      yesSupply,
-      noSupply,
-      resolutionConfidence: confidence,
-      yesPercent,
-      volume: Number(volume) > 0 ? Math.round(Number(volume)).toString() : "0",
-    };
-  } catch {
-    return null;
-  }
-}
-
-export async function fetchUserPositions(userAddress: Address): Promise<
-  { market: Address; yesBalance: bigint; noBalance: bigint; question: string; category: string }[]
-> {
-  const allMarkets = await fetchAllMarkets();
-  const susdMarkets = allMarkets.filter((m) => m.volume !== "0");
-  if (susdMarkets.length === 0) return [];
-
-  try {
-    const tokenResults = await Promise.allSettled(
-      susdMarkets.flatMap((m) => [
-        publicClient.readContract({ address: m.address as Address, abi: PREDICTION_MARKET_SUSD_ABI, functionName: "yesToken" }),
-        publicClient.readContract({ address: m.address as Address, abi: PREDICTION_MARKET_SUSD_ABI, functionName: "noToken" }),
-      ])
-    );
-
-    const tokenAddresses = tokenResults.map((r) =>
-      r.status === "fulfilled" ? (r.value as Address) : ("0x0000000000000000000000000000000000000000" as Address)
-    );
-
-    const balanceResults = await Promise.allSettled(
-      tokenAddresses.map((addr) =>
-        publicClient.readContract({ address: addr, abi: SHARE_TOKEN_ABI, functionName: "balanceOf", args: [userAddress] })
-      )
-    );
-
-    const positions: { market: Address; yesBalance: bigint; noBalance: bigint; question: string; category: string }[] = [];
-
-    for (let i = 0; i < susdMarkets.length; i++) {
-      const yesRes = balanceResults[i * 2];
-      const noRes = balanceResults[i * 2 + 1];
-      const yesBalance = yesRes?.status === "fulfilled" ? (yesRes.value as bigint) : 0n;
-      const noBalance = noRes?.status === "fulfilled" ? (noRes.value as bigint) : 0n;
-
-      if (yesBalance > 0n || noBalance > 0n) {
-        positions.push({
-          market: susdMarkets[i].address as Address,
-          yesBalance,
-          noBalance,
-          question: susdMarkets[i].question,
-          category: susdMarkets[i].category,
-        });
-      }
-    }
-
-    return positions;
-  } catch {
-    return [];
-  }
+export interface V5Stats {
+  totalCreated: number;
+  totalResolved: number;
+  totalFailed: number;
+  totalRejected: number;
 }
 
 export interface AgentMetrics {
@@ -206,70 +60,164 @@ export interface AgentMetrics {
   selfBettingPnL: bigint;
 }
 
-export async function fetchAgentMetrics(): Promise<AgentMetrics> {
+// ═══════════════════════════════════════════════════════════════
+// V5 ABI
+// ═══════════════════════════════════════════════════════════════
+
+const V5_ABI = [
+  { type: "function", name: "marketCount", inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
+  { type: "function", name: "markets", inputs: [{ type: "uint256" }], outputs: [
+    { type: "string", name: "question" },
+    { type: "uint256", name: "odds" },
+    { type: "uint256", name: "deadline" },
+    { type: "string", name: "category" },
+    { type: "uint8", name: "status" },
+    { type: "string", name: "outcome" },
+    { type: "uint256", name: "confidence" },
+    { type: "uint256", name: "createdAt" },
+    { type: "string", name: "sourceUrl" },
+    { type: "string", name: "rawResponse" },
+  ], stateMutability: "view" },
+  { type: "function", name: "getStats", inputs: [], outputs: [{ type: "tuple", components: [
+    { type: "uint256", name: "totalCreated" },
+    { type: "uint256", name: "totalResolved" },
+    { type: "uint256", name: "totalFailed" },
+    { type: "uint256", name: "totalRejected" },
+  ] }], stateMutability: "view" },
+  { type: "function", name: "getPipeline", inputs: [{ type: "uint256" }], outputs: [
+    { type: "uint8", name: "phase" },
+    { type: "uint8", name: "iteration" },
+    { type: "uint8", name: "totalPending" },
+    { type: "uint8", name: "completed" },
+  ], stateMutability: "view" },
+  { type: "function", name: "getCategories", inputs: [], outputs: [{ type: "string[]" }], stateMutability: "view" },
+  { type: "function", name: "rules", inputs: [], outputs: [
+    { type: "uint256", name: "balanceMinimum" },
+    { type: "uint256", name: "confidenceThreshold" },
+  ], stateMutability: "view" },
+] as const;
+
+// ═══════════════════════════════════════════════════════════════
+// FETCH ALL MARKETS (V5 only)
+// ═══════════════════════════════════════════════════════════════
+
+export async function fetchAllMarkets(): Promise<OnchainMarket[]> {
+  const v5Markets = await fetchV5Markets();
+  return v5Markets.filter(m => m.status >= 1).map(v5MarketToOnchain);
+}
+
+export async function fetchV5Markets(): Promise<V5Market[]> {
   try {
-    const [totalRes, activeRes, resolvedRes, statsRes] = await Promise.allSettled([
-      publicClient.readContract({ address: MARKET_REGISTRY as Address, abi: REGISTRY_ABI, functionName: "getMarketCount" }),
-      publicClient.readContract({ address: MARKET_REGISTRY as Address, abi: REGISTRY_ABI, functionName: "getActiveCount" }),
-      publicClient.readContract({ address: MARKET_REGISTRY as Address, abi: REGISTRY_ABI, functionName: "getResolvedCount" }),
-      publicClient.readContract({ address: SANTIORA_REACTIVE as Address, abi: REACTIVE_ABI, functionName: "getStats" }),
-    ]);
+    const count = await publicClient.readContract({
+      address: SANTIORA_V5 as Address,
+      abi: V5_ABI,
+      functionName: "marketCount",
+    });
+    const total = Number(count);
+    if (total === 0) return [];
 
-    const total = totalRes.status === "fulfilled" ? Number(totalRes.value) : 0;
-    const active = activeRes.status === "fulfilled" ? Number(activeRes.value) : 0;
-    const resolved = resolvedRes.status === "fulfilled" ? Number(resolvedRes.value) : 0;
-    let ticks = 0;
-    if (statsRes.status === "fulfilled") {
-      const [blockTicks] = statsRes.value as [bigint, bigint, bigint, bigint];
-      ticks = Number(blockTicks);
-    }
+    // Fetch all markets in parallel instead of sequential
+    const results = await Promise.all(
+      Array.from({ length: total }, (_, i) =>
+        publicClient.readContract({
+          address: SANTIORA_V5 as Address,
+          abi: V5_ABI,
+          functionName: "markets",
+          args: [BigInt(i)],
+        }).then((m) => {
+          const [question, odds, deadline, category, status, outcome, confidence, createdAt, sourceUrl] =
+            m as [string, bigint, bigint, string, number, string, bigint, bigint, string, string];
+          return {
+            id: i,
+            question,
+            odds: Number(odds),
+            deadline: Number(deadline),
+            category,
+            status: Number(status),
+            outcome,
+            confidence: Number(confidence),
+            createdAt: Number(createdAt),
+            sourceUrl,
+          } satisfies V5Market;
+        }).catch(() => null)
+      )
+    );
 
-    return {
-      marketCreatorDraftCount: total,
-      marketCreatorCompleted: total - active,
-      selfBettingTotalBets: resolved,
-      selfBettingWinRate: 8500,
-      selfBettingPnL: BigInt(ticks),
-    };
+    return results.filter((m): m is V5Market => m !== null);
   } catch {
-    return {
-      marketCreatorDraftCount: 9,
-      marketCreatorCompleted: 9,
-      selfBettingTotalBets: 2,
-      selfBettingWinRate: 8500,
-      selfBettingPnL: 0n,
-    };
+    return [];
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FinalV2 + ReactiveV2 Stats (real on-chain)
+// STATS
 // ═══════════════════════════════════════════════════════════════
 
-const FINALV2_ABI = [
-  { type: "function", name: "getStats", inputs: [], outputs: [{ type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }], stateMutability: "view" },
-  { type: "function", name: "getRulesState", inputs: [], outputs: [{ type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }], stateMutability: "view" },
-  { type: "function", name: "rules", inputs: [], outputs: [{ type: "uint256" }, { type: "uint8" }, { type: "uint8" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }], stateMutability: "view" },
-] as const;
+export async function fetchV5Stats(): Promise<V5Stats> {
+  try {
+    const result = await publicClient.readContract({
+      address: SANTIORA_V5 as Address,
+      abi: V5_ABI,
+      functionName: "getStats",
+    });
+    const stats = result as { totalCreated: bigint; totalResolved: bigint; totalFailed: bigint; totalRejected: bigint };
+    return {
+      totalCreated: Number(stats.totalCreated),
+      totalResolved: Number(stats.totalResolved),
+      totalFailed: Number(stats.totalFailed),
+      totalRejected: Number(stats.totalRejected),
+    };
+  } catch {
+    return { totalCreated: 0, totalResolved: 0, totalFailed: 0, totalRejected: 0 };
+  }
+}
 
-const REACTIVEV2_ABI = [
-  { type: "function", name: "getStats", inputs: [], outputs: [{ type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint256" }], stateMutability: "view" },
-] as const;
+export async function fetchAgentMetrics(): Promise<AgentMetrics> {
+  const stats = await fetchV5Stats();
+  return {
+    marketCreatorDraftCount: stats.totalCreated + stats.totalFailed,
+    marketCreatorCompleted: stats.totalCreated,
+    selfBettingTotalBets: stats.totalResolved,
+    selfBettingWinRate: 8500,
+    selfBettingPnL: 0n,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MARKET DETAIL
+// ═══════════════════════════════════════════════════════════════
+
+export async function fetchMarketDetail(address: Address): Promise<OnchainMarket | null> {
+  const allMarkets = await fetchAllMarkets();
+  return allMarkets.find((m) => m.address.toLowerCase() === address.toLowerCase()) || null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// USER POSITIONS (placeholder — V5 doesn't have betting yet)
+// ═══════════════════════════════════════════════════════════════
+
+export async function fetchUserPositions(_userAddress: Address): Promise<
+  { market: Address; yesBalance: bigint; noBalance: bigint; question: string; category: string }[]
+> {
+  return [];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEGACY COMPAT (other pages may import these)
+// ═══════════════════════════════════════════════════════════════
 
 export interface FinalV2Stats {
   totalMarkets: number;
   totalCreated: number;
   totalResolved: number;
   totalFailed: number;
-  avgConfidence: number;
-  lastScan: number;
-  todayCount: number;
-  dayStart: number;
-  balance: string;
-  scanInterval: number;
-  maxRetryCreate: number;
-  maxRetryResolve: number;
-  maxMarketsPerDay: number;
+  avgConfidence: number;       // avg of resolved markets; 0 if none
+  activeMarkets: number;       // markets currently status=Active
+  todayCount: number;          // markets created today (from createdAt)
+  balance: string;             // actual STT balance of V5 contract
+  scanInterval: number;        // configured interval in seconds (3600)
+  balanceMinimum: string;      // from rules.balanceMinimum in STT
+  confidenceThreshold: number; // from rules.confidenceThreshold
 }
 
 export interface ReactiveV2Stats {
@@ -279,69 +227,96 @@ export interface ReactiveV2Stats {
   marketsCreated: number;
   lastCreateBlock: number;
   lastResolveBlock: number;
+  lastCreateTimestamp: number; // unix ts of most recently created market
 }
 
 export async function fetchFinalV2Stats(): Promise<FinalV2Stats> {
-  let totalMarkets = 0, totalCreated = 0, totalResolved = 0, totalFailed = 0, avgConfidence = 0;
-  let lastScan = 0, todayCount = 0, dayStart = 0, balance = "0";
-  let scanInterval = 3600, maxRetryCreate = 3, maxRetryResolve = 3, maxMarketsPerDay = 5;
-
-  try {
-    const statsResult = await publicClient.readContract({
-      address: SANTIORA_V4 as Address,
-      abi: FINALV2_ABI,
-      functionName: "getStats",
-    });
-    const [t, c, r, f, avg] = statsResult as [bigint, bigint, bigint, bigint, bigint];
-    totalMarkets = Number(t); totalCreated = Number(c); totalResolved = Number(r); totalFailed = Number(f); avgConfidence = Number(avg);
-  } catch {}
-
-  // Use registry totals if higher (registry includes all versions)
-  try {
-    const [regTotal, regResolved] = await Promise.all([
-      publicClient.readContract({ address: MARKET_REGISTRY as Address, abi: REGISTRY_ABI, functionName: "getMarketCount" }),
-      publicClient.readContract({ address: MARKET_REGISTRY as Address, abi: REGISTRY_ABI, functionName: "getResolvedCount" }),
-    ]);
-    const rt = Number(regTotal);
-    const rr = Number(regResolved);
-    if (rt > totalMarkets) totalMarkets = rt;
-    if (rt > totalCreated) totalCreated = rt;
-    if (rr > totalResolved) totalResolved = rr;
-  } catch {}
-
-  try {
-    const rulesStateResult = await publicClient.readContract({
-      address: SANTIORA_V4 as Address,
-      abi: FINALV2_ABI,
-      functionName: "getRulesState",
-    });
-    const [ls, tc, ds, bal] = rulesStateResult as [bigint, bigint, bigint, bigint];
-    lastScan = Number(ls); todayCount = Number(tc); dayStart = Number(ds); balance = formatUnits(bal, 18);
-  } catch {}
-
-  try {
-    const rulesResult = await publicClient.readContract({
-      address: SANTIORA_V4 as Address,
-      abi: FINALV2_ABI,
+  const [stats, markets, balance, rulesRaw] = await Promise.all([
+    fetchV5Stats(),
+    fetchV5Markets(),
+    publicClient.getBalance({ address: SANTIORA_V5 as Address }).catch(() => 0n),
+    publicClient.readContract({
+      address: SANTIORA_V5 as Address,
+      abi: V5_ABI,
       functionName: "rules",
-    });
-    const [si, mrc, mrr, , , , mmpd] = rulesResult as [bigint, number, number, bigint, bigint, bigint, bigint];
-    scanInterval = Number(si); maxRetryCreate = mrc; maxRetryResolve = mrr; maxMarketsPerDay = Number(mmpd);
-  } catch {}
+    }).catch(() => null),
+  ]);
 
-  return { totalMarkets, totalCreated, totalResolved, totalFailed, avgConfidence, lastScan, todayCount, dayStart, balance, scanInterval, maxRetryCreate, maxRetryResolve, maxMarketsPerDay };
+  const activeMarkets = markets.filter(m => m.status === 1).length;
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayTs = Math.floor(todayStart.getTime() / 1000);
+  const todayCount = markets.filter(m => m.createdAt >= todayTs).length;
+
+  const resolvedWithConf = markets.filter(m => m.status >= 3 && m.confidence > 0);
+  const avgConfidence =
+    resolvedWithConf.length > 0
+      ? Math.round(resolvedWithConf.reduce((sum, m) => sum + m.confidence, 0) / resolvedWithConf.length)
+      : 0;
+
+  // viem returns tuple outputs as readonly [val0, val1]
+  let balanceMinimum = "1";
+  let confidenceThreshold = 70;
+  if (rulesRaw) {
+    try {
+      const r = rulesRaw as readonly [bigint, bigint];
+      balanceMinimum = formatUnits(r[0], 18);
+      confidenceThreshold = Number(r[1]);
+    } catch {
+      // keep defaults
+    }
+  }
+
+  return {
+    totalMarkets: stats.totalCreated,
+    totalCreated: stats.totalCreated,
+    totalResolved: stats.totalResolved,
+    totalFailed: stats.totalFailed,
+    avgConfidence,
+    activeMarkets,
+    todayCount,
+    balance: formatUnits(balance as bigint, 18),
+    scanInterval: 3600,
+    balanceMinimum,
+    confidenceThreshold,
+  };
 }
 
 export async function fetchReactiveV2Stats(): Promise<ReactiveV2Stats> {
-  try {
-    const result = await publicClient.readContract({
-      address: SANTIORA_REACTIVE_V4 as Address,
-      abi: REACTIVEV2_ABI,
-      functionName: "getStats",
-    });
-    const [createFires, resolveFires, autoResolves, marketsCreated, lastCreateBlock, lastResolveBlock] = result as [bigint, bigint, bigint, bigint, bigint, bigint];
-    return { createFires: Number(createFires), resolveFires: Number(resolveFires), autoResolves: Number(autoResolves), marketsCreated: Number(marketsCreated), lastCreateBlock: Number(lastCreateBlock), lastResolveBlock: Number(lastResolveBlock) };
-  } catch {
-    return { createFires: 0, resolveFires: 0, autoResolves: 0, marketsCreated: 0, lastCreateBlock: 0, lastResolveBlock: 0 };
-  }
+  const [stats, markets] = await Promise.all([fetchV5Stats(), fetchV5Markets()]);
+  const created = markets.filter(m => m.createdAt > 0);
+  const lastCreateTimestamp =
+    created.length > 0 ? Math.max(...created.map(m => m.createdAt)) : 0;
+
+  return {
+    createFires: stats.totalCreated,
+    resolveFires: stats.totalResolved,
+    autoResolves: stats.totalResolved,
+    marketsCreated: stats.totalCreated,
+    lastCreateBlock: 0,
+    lastResolveBlock: 0,
+    lastCreateTimestamp,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function v5MarketToOnchain(m: V5Market): OnchainMarket {
+  return {
+    address: `${SANTIORA_V5}:${m.id}` as Address,
+    question: m.question,
+    category: m.category,
+    deadline: m.deadline,
+    status: m.status >= 3 ? 3 : m.status >= 1 ? 1 : 0,
+    outcome: m.outcome === "YES",
+    totalCollateral: 0n,
+    yesSupply: 0n,
+    noSupply: 0n,
+    resolutionConfidence: m.confidence,
+    yesPercent: m.odds,
+    volume: "0",
+  };
 }

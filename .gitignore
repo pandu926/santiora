@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-# SECRETS & CREDENTIALS
+# SECRETS & CREDENTIALS — NEVER COMMIT
 # ═══════════════════════════════════════════════════════════════
 .env
 .env.*
@@ -8,6 +8,8 @@
 *.key
 *.p12
 *.secret
+.bot-mnemonic
+contracts/.bot-mnemonic
 
 # ═══════════════════════════════════════════════════════════════
 # NODE / DEPENDENCIES
@@ -22,17 +24,72 @@ contracts/artifacts/
 contracts/cache/
 contracts/typechain-types/
 contracts/node_modules/
+contracts/deployments/
 
 # ═══════════════════════════════════════════════════════════════
-# CONTRACTS — DEPLOYMENT LOGS & DEBUG SCRIPTS
-# (contain private key usage, tx hashes, internal testing)
+# CONTRACTS — OLD VERSIONS (superseded by V5)
 # ═══════════════════════════════════════════════════════════════
-contracts/deployments/
-contracts/scripts/debug-*
-contracts/scripts/test-*
-contracts/scripts/check-*
-contracts/scripts/decode-*
-contracts/scripts/scan-*
+contracts/src/agents/
+contracts/src/test/
+contracts/src/v4/
+contracts/deployed-agents/
+contracts/src/MarketFactoryLite.sol
+contracts/src/MarketRegistryV2.sol
+contracts/src/Treasury.sol
+
+# ═══════════════════════════════════════════════════════════════
+# CONTRACTS — SCRIPTS (exclude old/debug, keep production only)
+# ═══════════════════════════════════════════════════════════════
+contracts/scripts/diag-*.ts
+contracts/scripts/debug-*.ts
+contracts/scripts/forensic-*.ts
+contracts/scripts/trace-*.ts
+contracts/scripts/watch-*.ts
+contracts/scripts/check-*.ts
+contracts/scripts/inspect-*.ts
+contracts/scripts/find-*.ts
+contracts/scripts/scan-*.ts
+contracts/scripts/redeploy-*.ts
+contracts/scripts/continue-*.ts
+contracts/scripts/fix-*.ts
+contracts/scripts/read-*.ts
+contracts/scripts/deep-*.ts
+contracts/scripts/deploy-brain.ts
+contracts/scripts/deploy-final.ts
+contracts/scripts/deploy-finalv2.ts
+contracts/scripts/deploy-finalv2-proven.ts
+contracts/scripts/deploy-finalv3.ts
+contracts/scripts/deploy-orchestrator.ts
+contracts/scripts/deploy-reactive-v2.js
+contracts/scripts/deploy-v2-node.js
+contracts/scripts/deploy-v4.ts
+contracts/scripts/deploy-v4-creator.ts
+contracts/scripts/deploy-test-v4.ts
+contracts/scripts/deploy-ai-markets.ts
+contracts/scripts/deploy-daily-markets.ts
+contracts/scripts/authorize-and-prove.ts
+contracts/scripts/fund-and-start-reactive.ts
+contracts/scripts/prove-v3-create.ts
+contracts/scripts/restart-reactive-v4.ts
+contracts/scripts/topup-reactive.ts
+contracts/scripts/can.ts
+contracts/scripts/reg-mk0.ts
+contracts/scripts/relax-and-trigger.ts
+contracts/scripts/simulate-react.ts
+contracts/scripts/sweep-old-contracts.ts
+contracts/scripts/tx-events.ts
+contracts/scripts/tx-history.ts
+contracts/scripts/tx-receipt.ts
+contracts/scripts/verify-wiring.ts
+contracts/scripts/raw-getmarket.ts
+contracts/scripts/list-markets.ts
+contracts/scripts/revive-loops.ts
+contracts/scripts/retune-interval.ts
+
+# ═══════════════════════════════════════════════════════════════
+# INTERNAL AUDIT / DEBUG FILES
+# ═══════════════════════════════════════════════════════════════
+contracts/AUDIT-V3.md
 
 # ═══════════════════════════════════════════════════════════════
 # FRONTEND BUILD OUTPUT
@@ -40,34 +97,43 @@ contracts/scripts/scan-*
 frontend/.next/
 frontend/node_modules/
 frontend/test-results/
+frontend/tsconfig.tsbuildinfo
 
 # ═══════════════════════════════════════════════════════════════
-# BACKEND
+# PLAYWRIGHT SNAPSHOTS (internal dev tooling)
 # ═══════════════════════════════════════════════════════════════
-backend/target/
-backend.log
+.playwright-mcp/
+*.png
+*.jpg
+*.jpeg
+!frontend/public/*.png
+!frontend/public/*.jpg
 
 # ═══════════════════════════════════════════════════════════════
-# PLANNING & INTERNAL DOCS (not for public)
+# CLAUDE / AI TOOLING (internal dev workflow)
+# ═══════════════════════════════════════════════════════════════
+.claude/
+frontend/.claude/
+.agents/
+CLAUDE.md
+
+# ═══════════════════════════════════════════════════════════════
+# PLANNING & INTERNAL DOCS
 # ═══════════════════════════════════════════════════════════════
 .planning/
 frontend/.planning/
 contracts/.planning/
 PLAN.md
 HACKATHON-STRATEGY.md
-
-# ═══════════════════════════════════════════════════════════════
-# CLAUDE CODE / AI TOOLING (internal dev workflow)
-# ═══════════════════════════════════════════════════════════════
-.claude/
-frontend/.claude/
-CLAUDE.md
+VIDEO-SCRIPT.md
 
 # ═══════════════════════════════════════════════════════════════
 # MISC INTERNAL FILES
 # ═══════════════════════════════════════════════════════════════
 doc-infertoolchat.txt
 .env.docker
+backend/target/
+backend.log
 
 # ═══════════════════════════════════════════════════════════════
 # IDE

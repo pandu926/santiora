@@ -1,6 +1,5 @@
-import { formatUnits, type Address } from "viem";
-import { publicClient, fetchAllMarkets, fetchAgentMetrics, MARKET_REGISTRY } from "./onchain";
-import { CONTRACTS } from "./config";
+import { formatUnits } from "viem";
+import { fetchAllMarkets, fetchAgentMetrics } from "./onchain";
 
 export interface MarketResponse {
   id: string;
@@ -249,7 +248,7 @@ export async function fetchAgentArena(): Promise<{ agents: { name: string; type:
   const metrics = await fetchAgentMetrics();
   return {
     agents: [
-      { name: "MarketCreatorV3", type: "Creator", wins: metrics.marketCreatorCompleted, losses: metrics.marketCreatorDraftCount - metrics.marketCreatorCompleted, pnl: `+${(metrics.marketCreatorCompleted * 0.81).toFixed(2)}`, status: "Active" },
+      { name: "MarketCreatorV5", type: "Creator", wins: metrics.marketCreatorCompleted, losses: metrics.marketCreatorDraftCount - metrics.marketCreatorCompleted, pnl: `+${(metrics.marketCreatorCompleted * 0.81).toFixed(2)}`, status: "Active" },
       { name: "ConsensusResolver", type: "Resolver", wins: 8, losses: 0, pnl: "+12.00", status: "Active" },
       { name: "AgentSelfBetting", type: "Bettor", wins: Number(metrics.selfBettingWinRate) / 100, losses: metrics.selfBettingTotalBets - Number(metrics.selfBettingWinRate) / 100, pnl: formatUnits(metrics.selfBettingPnL, 18), status: "Active" },
       { name: "ReactiveResolver", type: "Trigger", wins: 10, losses: 0, pnl: "0.00", status: "Active" },

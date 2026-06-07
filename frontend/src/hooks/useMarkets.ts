@@ -1,10 +1,37 @@
 import { useReadContract, useReadContracts } from "wagmi";
-import { formatEther } from "viem";
-import { CONTRACTS } from "@/lib/config";
-import { MARKET_FACTORY_ABI } from "@/lib/abi/MarketFactory";
-import { PREDICTION_MARKET_ABI } from "@/lib/abi/PredictionMarket";
+
+const SANTIORA_V5 = "0x9dca8a2c8dE29F0c8432F0342E411e56f10Bc9a8" as const;
+
+const SANTIORA_V5_ABI = [
+  {
+    name: "marketCount",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "markets",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "index", type: "uint256" }],
+    outputs: [
+      { name: "question", type: "string" },
+      { name: "odds", type: "uint256" },
+      { name: "deadline", type: "uint256" },
+      { name: "category", type: "string" },
+      { name: "status", type: "uint8" },
+      { name: "outcome", type: "string" },
+      { name: "confidence", type: "uint256" },
+      { name: "createdAt", type: "uint256" },
+      { name: "sourceUrl", type: "string" },
+      { name: "rawResponse", type: "string" },
+    ],
+  },
+] as const;
 
 export interface MarketData {
+  id: number;
   address: string;
   question: string;
   deadline: number;
@@ -18,85 +45,72 @@ export interface MarketData {
 
 const STATUS_LABELS = ["Created", "Active", "Resolving", "Resolved", "Settled"] as const;
 
-function categoryFromBytes32(hex: string): string {
-  const stripped = hex.replace(/00+$/, "");
-  if (stripped === "0x" || stripped === "") return "general";
-  try {
-    return Buffer.from(stripped.slice(2), "hex").toString("utf8");
-  } catch {
-    return "general";
-  }
-}
-
 export function useMarketCount() {
   return useReadContract({
-    address: CONTRACTS.MARKET_FACTORY as `0x${string}`,
-    abi: MARKET_FACTORY_ABI,
-    functionName: "getMarketCount",
-  });
-}
-
-export function useMarketAddresses(offset: number, limit: number) {
-  return useReadContract({
-    address: CONTRACTS.MARKET_FACTORY as `0x${string}`,
-    abi: MARKET_FACTORY_ABI,
-    functionName: "getMarkets",
-    args: [BigInt(offset), BigInt(limit)],
-  });
-}
-
-export function useMarketInfo(marketAddress: string | undefined) {
-  return useReadContract({
-    address: marketAddress as `0x${string}`,
-    abi: PREDICTION_MARKET_ABI,
-    functionName: "getMarketInfo",
-    query: { enabled: !!marketAddress },
+    address: SANTIORA_V5,
+    abi: SANTIORA_V5_ABI,
+    functionName: "marketCount",
   });
 }
 
 export function useMarkets(offset: number, limit: number) {
-  const { data: addresses, isLoading: addressesLoading } = useMarketAddresses(offset, limit);
+  const { data: count, isLoading: countLoading } = useMarketCount();
 
-  const contracts = (addresses || []).map((addr) => ({
-    address: addr as `0x${string}`,
-    abi: PREDICTION_MARKET_ABI,
-    functionName: "getMarketInfo" as const,
+  const total = count ? Number(count) : 0;
+  const start = Math.min(offset, total);
+  const end = Math.min(offset + limit, total);
+  const indices = Array.from({ length: Math.max(0, end - start) }, (_, i) => start + i);
+
+  const contracts = indices.map((i) => ({
+    address: SANTIORA_V5,
+    abi: SANTIORA_V5_ABI,
+    functionName: "markets" as const,
+    args: [BigInt(i)] as const,
   }));
 
   const { data: results, isLoading: marketsLoading } = useReadContracts({
     contracts,
-    query: { enabled: !!addresses && addresses.length > 0 },
+    query: { enabled: !countLoading && indices.length > 0 },
   });
 
   const markets: MarketData[] = (results || [])
     .map((result, i) => {
       if (result.status !== "success" || !result.result) return null;
-      const [question, deadline, cat, status, collateral, yesSupply, noSupply] = result.result as [
-        string, bigint, string, number, bigint, bigint, bigint
+      const [question, odds, deadline, category, status] = result.result as [
+        string,
+        bigint,
+        bigint,
+        string,
+        number,
+        string,
+        bigint,
+        bigint,
+        string,
+        string,
       ];
 
-      const totalShares = yesSupply + noSupply;
-      const yesOdds = totalShares > 0n
-        ? Number((yesSupply * 100n) / totalShares)
-        : 50;
-
       return {
-        address: (addresses as string[])[i],
+        id: start + i,
+        address: `${SANTIORA_V5}:${start + i}`,
         question,
         deadline: Number(deadline),
-        category: categoryFromBytes32(cat as string),
-        status,
-        totalCollateral: formatEther(collateral),
-        yesSupply,
-        noSupply,
-        yesOdds,
+        category,
+        status: Number(status),
+        totalCollateral: "0",
+        yesSupply: 0n,
+        noSupply: 0n,
+        yesOdds: Number(odds),
       };
     })
     .filter((m): m is MarketData => m !== null);
 
   return {
     markets,
-    isLoading: addressesLoading || marketsLoading,
-    statusLabel: (s: number) => STATUS_LABELS[s] || "Unknown",
+    isLoading: countLoading || marketsLoading,
+    statusLabel: (s: number) => STATUS_LABELS[s as keyof typeof STATUS_LABELS] || "Unknown",
   };
+}
+
+export function useMarketInfo(_marketAddress: string | undefined) {
+  return { data: null, isLoading: false };
 }

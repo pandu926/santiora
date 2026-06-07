@@ -1,10 +1,8 @@
 # Reactivity System
 
-Santiora's autonomous operation relies on Somnia Native Reactivity — a chain-level feature that triggers contract callbacks at specific blocks without external cron jobs or keepers.
+Santiora's autonomous operation relies on Somnia Native Reactivity -- a chain-level feature that triggers contract callbacks at specific blocks without external cron jobs, keepers, or off-chain infrastructure.
 
 ## Overview
-
-Traditional approaches to periodic on-chain execution:
 
 | Approach | Requires | Cost Model | Reliability |
 |----------|----------|------------|-------------|
@@ -43,14 +41,14 @@ struct SubscriptionOptions {
 
 ```
 Block 100: Contract calls scheduleSubscriptionAtBlock(self, 200, opts)
-            → Subscription created, ID returned
-            → Validators note: "fire callback at block 200"
+            -> Subscription created, ID returned
+            -> Validators note: "fire callback at block 200"
 
 Block 101-199: Nothing happens. Zero gas consumed.
 
 Block 200: Validator includes callback transaction
-            → Contract._onEvent() executes
-            → Contract schedules next: scheduleSubscriptionAtBlock(self, 300, opts)
+            -> Contract._onEvent() executes
+            -> Contract schedules next: scheduleSubscriptionAtBlock(self, 300, opts)
 
 Block 201-299: Nothing happens. Zero gas consumed.
 
@@ -59,51 +57,57 @@ Block 300: Cycle repeats.
 
 ### Key Properties
 
-- **One-shot:** Each subscription fires exactly once, then is consumed
-- **Self-perpetuating:** The callback can schedule the next subscription
-- **Minimum balance:** Contract must hold ≥ 32 STT (protocol requirement)
-- **Gas limit:** Maximum 200,000,000 per callback (protocol cap)
-- **Cost:** ~210K gas to create a subscription (~0.002 STT)
+- **One-shot:** Each subscription fires exactly once, then is consumed.
+- **Self-perpetuating:** The callback can schedule the next subscription, creating an infinite loop.
+- **Cost:** Gas is only consumed when the subscription fires and re-schedules. No idle cost.
+- **Minimum balance:** Contract must hold enough STT to cover gas for subscription creation and callback execution.
 
-## SantioraReactiveV2 Implementation
+## SantioraReactiveV5
+
+SantioraReactiveV5 inherits `SomniaEventHandler` and implements the block-based scheduling pattern for the V5 protocol.
 
 ### Contract Structure
 
 ```solidity
-contract SantioraReactiveV2 is SomniaEventHandler {
-    uint64 public createIntervalBlocks;   // 4500 blocks = ~30 min
-    uint64 public resolveIntervalBlocks;  // 4500 blocks = ~30 min
-    uint64 public gasLimitCreate;         // 20,000,000
-    uint64 public gasLimitResolve;        // 10,000,000
+contract SantioraReactiveV5 is SomniaEventHandler {
+    uint64 public createIntervalBlocks;   // e.g. 300 blocks between create fires
+    uint64 public resolveIntervalBlocks;  // e.g. 600 blocks between resolve fires
 
     uint256 public createSubscriptionId;
     uint256 public resolveSubscriptionId;
+
+    uint256 public lastCreateBlock;
+    uint256 public lastResolveBlock;
 }
 ```
 
 ### Two Independent Loops
 
-ReactiveV2 runs two self-perpetuating loops:
+SantioraReactiveV5 runs two self-perpetuating loops controlled by the owner:
 
-**Create Loop** — triggers market creation every N blocks:
+**Create Loop** -- triggers AI market creation every N blocks:
+
 ```
 startCreateLoop()
-    → scheduleSubscriptionAtBlock(block + createIntervalBlocks)
-    → fires → _handleCreate() → scheduleSubscriptionAtBlock(block + createIntervalBlocks)
-    → fires → _handleCreate() → scheduleSubscriptionAtBlock(block + createIntervalBlocks)
-    → ... forever
+    -> scheduleSubscriptionAtBlock(block + createIntervalBlocks)
+    -> fires -> _onEvent() -> _handleCreate() -> scheduleSubscriptionAtBlock(block + createIntervalBlocks)
+    -> fires -> _onEvent() -> _handleCreate() -> scheduleSubscriptionAtBlock(block + createIntervalBlocks)
+    -> ... forever
 ```
 
-**Resolve Loop** — checks for expired markets every N blocks:
+**Resolve Loop** -- checks for expired markets every N blocks:
+
 ```
 startResolveLoop()
-    → scheduleSubscriptionAtBlock(block + resolveIntervalBlocks)
-    → fires → _handleResolve() → scheduleSubscriptionAtBlock(block + resolveIntervalBlocks)
-    → fires → _handleResolve() → scheduleSubscriptionAtBlock(block + resolveIntervalBlocks)
-    → ... forever
+    -> scheduleSubscriptionAtBlock(block + resolveIntervalBlocks)
+    -> fires -> _onEvent() -> _handleResolve() -> scheduleSubscriptionAtBlock(block + resolveIntervalBlocks)
+    -> fires -> _onEvent() -> _handleResolve() -> scheduleSubscriptionAtBlock(block + resolveIntervalBlocks)
+    -> ... forever
 ```
 
 ### Callback Handler
+
+The `_onEvent` callback is invoked by the Somnia validator when a subscription fires:
 
 ```solidity
 function _onEvent(
@@ -113,123 +117,50 @@ function _onEvent(
 ) internal override {
     uint256 currentBlock = block.number;
 
-    // Determine which job fired based on timing
     if (currentBlock >= lastCreateBlock + createIntervalBlocks) {
         _handleCreate();
-        createSubscriptionId = _scheduleAt(currentBlock + createIntervalBlocks, gasLimitCreate);
+        createSubscriptionId = SomniaExtensions.scheduleSubscriptionAtBlock(
+            address(this),
+            uint64(currentBlock + createIntervalBlocks),
+            _subscriptionOptions(gasLimitCreate)
+        );
         lastCreateBlock = currentBlock;
     }
 
     if (currentBlock >= lastResolveBlock + resolveIntervalBlocks) {
         _handleResolve();
-        resolveSubscriptionId = _scheduleAt(currentBlock + resolveIntervalBlocks, gasLimitResolve);
+        resolveSubscriptionId = SomniaExtensions.scheduleSubscriptionAtBlock(
+            address(this),
+            uint64(currentBlock + resolveIntervalBlocks),
+            _subscriptionOptions(gasLimitResolve)
+        );
         lastResolveBlock = currentBlock;
     }
 }
 ```
 
-### Internal Scheduling Helper
+Each callback handles the relevant job (create or resolve, or both if intervals align), then immediately re-schedules the next fire. This is what makes the loop self-perpetuating.
 
-```solidity
-function _scheduleAt(uint64 targetBlock, uint64 gasLimit) internal returns (uint256) {
-    SomniaExtensions.SubscriptionOptions memory opts = SomniaExtensions.SubscriptionOptions({
-        priorityFeePerGas: 2_000_000_000,   // 2 gwei priority
-        maxFeePerGas: 10_000_000_000,        // 10 gwei max
-        gasLimit: gasLimit
-    });
+### Category Rotation
 
-    return SomniaExtensions.scheduleSubscriptionAtBlock(
-        address(this),
-        targetBlock,
-        opts
-    );
-}
+The create loop rotates through four categories to ensure diverse market coverage. Each time `_handleCreate()` fires, the system advances to the next category:
+
+```
+sports -> crypto -> finance -> technology -> sports -> ...
 ```
 
-## Gas Economics
+The current category is tracked on-chain. When the create handler fires, SantioraReactiveV5 calls SantioraV5 to generate a market in the current category via the Agent Platform's LLM (Agent ID `12847293847561029384`).
 
-### Per-Fire Cost Breakdown
+If market creation cannot proceed (e.g. insufficient funds, rate limit, LLM unavailable), the loop fires a `CreateSkipped` event with the reason and continues to the next cycle. The loop never stalls permanently.
 
-| Operation | Gas Used | Cost (STT) |
-|-----------|----------|------------|
-| Callback execution overhead | ~50,000 | 0.0005 |
-| Subscription creation (re-schedule) | ~210,000 | 0.002 |
-| _handleResolve (scan markets) | ~200,000 | 0.002 |
-| _handleCreate (call FinalV2) | ~300,000 | 0.003 |
-| **Total per fire** | **~500,000** | **~0.005** |
+### Auto-Resolve Logic
 
-### Daily Cost at Default Intervals
+The resolve loop scans for markets that need resolution. A market is eligible for auto-resolution when:
 
-| Loop | Interval | Fires/Day | Cost/Day |
-|------|----------|-----------|----------|
-| Create | 4500 blocks (~30 min) | 48 | 0.24 STT |
-| Resolve | 4500 blocks (~30 min) | 48 | 0.24 STT |
-| **Total** | | **96** | **~0.48 STT** |
+- `status == 1` (active/open)
+- `block.timestamp >= deadline` (past its expiration)
 
-### Sustainability
-
-| Deposit | Duration |
-|---------|----------|
-| 40 STT | ~83 days |
-| 100 STT | ~208 days |
-| 32 STT (minimum) | ~66 days |
-
-Note: FinalV2 agent calls cost additional ~0.33 STT each. With 48 creates/day, FinalV2 needs ~16 STT/day. Adjust `createIntervalBlocks` to control agent call frequency.
-
-## Configuration
-
-### Adjusting Intervals
-
-```solidity
-// Owner-only functions
-function setCreateInterval(uint64 _blocks) external onlyOwner;
-function setResolveInterval(uint64 _blocks) external onlyOwner;
-```
-
-Common configurations:
-
-| Use Case | Create Interval | Resolve Interval | Fires/Day |
-|----------|----------------|------------------|-----------|
-| Demo (fast) | 750 (~5 min) | 750 (~5 min) | 576 |
-| Production | 4500 (~30 min) | 4500 (~30 min) | 96 |
-| Conservative | 9000 (~1 hr) | 4500 (~30 min) | 72 |
-| Minimal | 21600 (~2.4 hr) | 9000 (~1 hr) | 34 |
-
-### Stopping and Restarting
-
-```solidity
-// Stop loops (unsubscribes from validator)
-function stopCreateLoop() external onlyOwner;
-function stopResolveLoop() external onlyOwner;
-
-// Restart (creates new subscription)
-function startCreateLoop() external onlyOwner;
-function startResolveLoop() external onlyOwner;
-```
-
-### Gas Limit Tuning
-
-```solidity
-function setGasLimits(uint64 _create, uint64 _resolve) external onlyOwner;
-```
-
-- `gasLimitCreate`: Must be high enough for FinalV2.createMarket → inferToolsChat chain. Recommended: 20,000,000.
-- `gasLimitResolve`: Must cover market scanning + autoResolveExpired. Recommended: 10,000,000.
-
-## Monitoring
-
-### On-Chain Stats
-
-```solidity
-function getStats() external view returns (
-    uint256 createFires,      // Total create loop executions
-    uint256 resolveFires,     // Total resolve loop executions
-    uint256 autoResolves,     // Markets successfully auto-resolved
-    uint256 marketsCreated,   // Markets successfully created
-    uint256 lastCreateBlock,  // Block of last create fire
-    uint256 lastResolveBlock  // Block of last resolve fire
-);
-```
+When `_handleResolve()` fires, SantioraReactiveV5 calls SantioraV5 to resolve any expired markets. SantioraV5 uses the Agent Platform's JSON API agent (Agent ID `13174292974160097713`) to fetch and verify real-world event data, then records the outcome on-chain.
 
 ### Events
 
@@ -240,88 +171,187 @@ event ResolveFired(uint256 blockNumber, uint256 marketsChecked, uint256 marketsR
 event ScheduledNext(string jobType, uint64 targetBlock, uint256 subscriptionId);
 ```
 
-### Verifying Loop Health
+## Gas Economics
+
+Actual gas costs depend on block times, network congestion, and agent inference complexity. Key variables:
+
+- **Create cost per market:** Agent calls consume STT for LLM inference. Each market creation costs approximately 0.72 STT through the Agent Platform.
+- **Resolve cost:** Scanning for expired markets and fetching resolution data has lower gas overhead than creation.
+- **Subscription creation:** Each `scheduleSubscriptionAtBlock` call incurs gas for the precompile interaction, typically around 210K gas.
+
+Fund SantioraReactiveV5 with enough STT to cover many cycles. Fund SantioraV5 with at least 1 STT (each market costs approximately 0.72 STT in agent fees). Monitor balances and top up before they run out.
+
+## Configuration
+
+### Starting and Stopping
+
+```solidity
+// Owner starts the autonomous loops
+function startCreateLoop() external onlyOwner;
+function startResolveLoop() external onlyOwner;
+
+// Owner stops loops (unsubscribes from validator)
+function stopCreateLoop() external onlyOwner;
+function stopResolveLoop() external onlyOwner;
+```
+
+### Adjusting Intervals
+
+```solidity
+function setCreateInterval(uint64 _blocks) external onlyOwner;
+function setResolveInterval(uint64 _blocks) external onlyOwner;
+```
+
+Common configurations (assuming ~3 second block time on Somnia):
+
+| Use Case | Create Interval | Resolve Interval | Approx. Creates/Day |
+|----------|----------------|------------------|---------------------|
+| Demo (fast) | 100 (~5 min) | 200 (~10 min) | ~288 |
+| Balanced | 300 (~15 min) | 600 (~30 min) | ~96 |
+| Production | 600 (~30 min) | 1200 (~1 hr) | ~48 |
+| Conservative | 1200 (~1 hr) | 2400 (~2 hr) | ~24 |
+
+### Gas Limit Tuning
+
+```solidity
+function setGasLimits(uint64 _create, uint64 _resolve) external onlyOwner;
+```
+
+- `gasLimitCreate`: Must cover the full SantioraV5 market creation path including agent inference. Set higher if callbacks revert during creation.
+- `gasLimitResolve`: Must cover scanning markets and processing resolutions. Usually lower than create.
+
+## Monitoring Loop Health
+
+### On-Chain Stats
+
+SantioraReactiveV5 exposes stats for monitoring:
+
+```solidity
+function getStats() external view returns (
+    uint256 createFires,
+    uint256 resolveFires,
+    uint256 autoResolves,
+    uint256 marketsCreated,
+    uint256 lastCreateBlock,
+    uint256 lastResolveBlock
+);
+```
+
+### Verifying Loops Are Alive
 
 ```javascript
 const stats = await publicClient.readContract({
-  address: REACTIVE_V2,
-  abi: reactiveV2Abi,
+  address: REACTIVE_V5,
+  abi: reactiveV5Abi,
   functionName: "getStats",
 });
 
 const [createFires, resolveFires, , , lastCreate, lastResolve] = stats;
 const currentBlock = await publicClient.getBlockNumber();
 
-// Check if loops are alive
-const createAlive = (currentBlock - lastCreate) < createInterval * 2;
-const resolveAlive = (currentBlock - lastResolve) < resolveInterval * 2;
+// A loop is considered alive if it fired within 2x its interval
+const createAlive = (currentBlock - lastCreate) < createInterval * 2n;
+const resolveAlive = (currentBlock - lastResolve) < resolveInterval * 2n;
 ```
 
-## Comparison: BlockTick vs scheduleSubscriptionAtBlock
+### Subscription ID Check
 
-### BlockTick (Old Approach)
+```javascript
+const createSubId = await publicClient.readContract({
+  address: REACTIVE_V5,
+  abi: reactiveV5Abi,
+  functionName: "createSubscriptionId",
+});
 
-```solidity
-// Subscribes to EVERY block — fires 216,000 times/day
-bytes32 blockTickSig = keccak256("BlockTick(uint64)");
-PRECOMPILE.subscribe(subData); // fires every 400ms
-
-function _onEvent(...) {
-    // Called every single block
-    if (block.number % 4500 == 0) {
-        // Only do work 48 times/day
-        // But PAY GAS 216,000 times/day
-    }
+if (createSubId === 0n) {
+  // Create loop is dead -- restart it
+  console.warn("Create loop is not active. Call startCreateLoop() to restart.");
 }
 ```
 
-**Problem:** You pay gas for 216,000 no-op callbacks to get 48 useful ones.
-
-### scheduleSubscriptionAtBlock (Current Approach)
-
-```solidity
-// Schedule exactly when needed — fires 96 times/day
-SomniaExtensions.scheduleSubscriptionAtBlock(self, block + 4500, opts);
-
-function _onEvent(...) {
-    // Called exactly when scheduled
-    // ALWAYS does useful work
-    _handleCreate();
-    // Re-schedule next
-    scheduleSubscriptionAtBlock(self, block + 4500, opts);
-}
-```
-
-**Result:** 3000x fewer callbacks. Zero idle gas. Same functionality.
+A subscription ID of 0 means the loop is not running. This can happen if the loop was stopped manually, or if a callback reverted and failed to re-schedule.
 
 ## Troubleshooting
 
 ### Loop Stopped Firing
 
-1. Check contract balance: must be ≥ 32 STT
-2. Check subscription IDs: if 0, loop was stopped or failed to re-schedule
-3. Check gas limit: if callback reverts, subscription is consumed but not re-scheduled
+1. **Check contract balance:** Insufficient STT prevents subscription creation. Top up if needed.
+2. **Check subscription IDs:** If either ID is 0, the loop was stopped or failed to re-schedule.
+3. **Check gas limits:** If a callback reverts (out of gas), the subscription is consumed but the re-schedule never executes.
 
 ```javascript
 const createSubId = await readContract({ functionName: "createSubscriptionId" });
+const resolveSubId = await readContract({ functionName: "resolveSubscriptionId" });
+
 if (createSubId === 0n) {
-  // Loop is dead — restart it
   await writeContract({ functionName: "startCreateLoop", gas: 5_000_000n });
+}
+if (resolveSubId === 0n) {
+  await writeContract({ functionName: "startResolveLoop", gas: 5_000_000n });
 }
 ```
 
 ### Callback Reverts
 
-If the callback reverts, the subscription is consumed (gas paid) but the loop breaks because `_scheduleAt` never executes. Common causes:
+If a callback reverts, the subscription is consumed (gas paid) but the loop breaks because `scheduleSubscriptionAtBlock` never executes. Common causes:
 
-- FinalV2 out of STT (can't pay for agent calls)
-- FinalV2 `canCreateMarket()` returns false and the try/catch doesn't cover all paths
+- SantioraV5 out of STT (cannot pay for agent inference calls)
+- Agent Platform is rate-limiting or unavailable
 - Gas limit too low for the full execution chain
+- Market creation or resolution logic hitting an unexpected state
 
-Fix: Restart the loop after resolving the underlying issue.
+**Fix:** Resolve the underlying issue, then restart the affected loop.
 
-### Balance Below Minimum
+### Balance Drops Below Minimum
 
-The 32 STT minimum is checked at subscription creation time. If balance drops below 32 STT between fires, the next `_scheduleAt` call will revert with `InsufficientBalance()`.
+Monitor balances proactively. If SantioraV5 balance drops below 1 STT, new market creation will fail. If SantioraReactiveV5 balance drops below what is needed for subscription creation, loop rescheduling will fail.
 
-Monitor balance and top up before it drops below 35 STT.
+Set up balance monitoring:
+
+```javascript
+const v5Balance = await client.getBalance({ address: SANTIORA_V5 });
+const reactiveBalance = await client.getBalance({ address: REACTIVE_V5 });
+
+if (Number(formatEther(v5Balance)) < 1) {
+  console.warn("WARNING: SantioraV5 balance below 1 STT. Market creation will fail.");
+}
+if (Number(formatEther(reactiveBalance)) < 2) {
+  console.warn("WARNING: SantioraReactiveV5 balance low. Loop may fail to re-schedule.");
+}
+```
+
+## Comparison: BlockTick vs scheduleSubscriptionAtBlock
+
+### BlockTick (Legacy Approach)
+
+```solidity
+// Subscribes to EVERY block -- thousands of callbacks per day
+bytes32 blockTickSig = keccak256("BlockTick(uint64)");
+PRECOMPILE.subscribe(subData);
+
+function _onEvent(...) {
+    // Called every single block
+    if (block.number % 300 == 0) {
+        // Only do work on specific blocks
+        // But PAY GAS for every callback
+    }
+}
+```
+
+**Problem:** You pay gas for thousands of no-op callbacks to get a handful of useful ones.
+
+### scheduleSubscriptionAtBlock (V5 Approach)
+
+```solidity
+// Schedule exactly when needed
+SomniaExtensions.scheduleSubscriptionAtBlock(self, block + 300, opts);
+
+function _onEvent(...) {
+    // Called exactly when scheduled -- ALWAYS does useful work
+    _handleCreate();
+    // Re-schedule next
+    SomniaExtensions.scheduleSubscriptionAtBlock(self, block + 300, opts);
+}
+```
+
+**Result:** Orders-of-magnitude fewer callbacks. Zero idle gas. Same functionality. Every callback produces market activity or resolution.

@@ -70,7 +70,7 @@ export default function ActivityPage() {
           </span>
         </div>
         <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-          <span>ReactiveV4 + SantioraV4</span>
+          <span>SantioraV5 LLM Orchestrator</span>
           <span className="font-mono">{activities.length} events</span>
         </div>
       </Card>

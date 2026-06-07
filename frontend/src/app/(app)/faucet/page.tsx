@@ -45,7 +45,6 @@ export default function FaucetPage() {
 
   const { openConnectModal } = useConnectModal();
 
-  // Auto-reset success state after 10s
   useEffect(() => {
     if (state === "confirmed") {
       const timeout = setTimeout(() => resetState(), 10000);

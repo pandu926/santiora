@@ -5,7 +5,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchFinalV2Stats, fetchReactiveV2Stats, FinalV2Stats, ReactiveV2Stats, SANTIORA_V4, SANTIORA_REACTIVE_V4, MARKET_REGISTRY } from "@/lib/onchain";
+import { fetchFinalV2Stats, fetchReactiveV2Stats, FinalV2Stats, ReactiveV2Stats, SANTIORA_V5, SANTIORA_V5_PROMPTS } from "@/lib/onchain";
 import { CONTRACTS } from "@/lib/config";
 
 const EXPLORER = "https://shannon-explorer.somnia.network";
@@ -110,15 +110,15 @@ export default function AIPage() {
           <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-600 border-green-500/20">ACTIVE</Badge>
         </div>
         <div className="flex items-center justify-center min-w-[600px]">
-          <PipelineStep label="ReactiveV4" value={r.createFires + r.resolveFires} active pulse />
+          <PipelineStep label="ReactiveV5" value={r.createFires + r.resolveFires} active pulse />
           <PipelineArrow />
           <PipelineStep label="Schedule" value={r.createFires} active={r.createFires > 0} />
           <PipelineArrow />
-          <PipelineStep label="SantioraV4" value={f.totalMarkets} active />
+          <PipelineStep label="SantioraV5" value={f.totalCreated} active />
           <PipelineArrow />
           <PipelineStep label="inferToolsChat" value={f.totalCreated} active={f.totalCreated > 0} pulse />
           <PipelineArrow />
-          <PipelineStep label="Market Active" value={f.totalCreated} active={f.totalCreated > 0} />
+          <PipelineStep label="Market Active" value={f.activeMarkets} active={f.activeMarkets > 0} />
           <PipelineArrow />
           <PipelineStep label="Registry" value={f.totalMarkets} active />
         </div>
@@ -141,16 +141,16 @@ export default function AIPage() {
         <StatCard label="Markets Resolved" value={f.totalResolved} sub="autonomous" />
         <StatCard label="Create Fires" value={r.createFires} sub="market creation" />
         <StatCard label="Resolve Fires" value={r.resolveFires} sub="auto-resolve" />
-        <StatCard label="Balance" value={`${Number(f.balance).toFixed(2)} STT`} sub="FinalV2 funds" />
-        <StatCard label="Block Time" value="400ms" sub="Somnia finality" />
+        <StatCard label="Balance" value={`${Number(f.balance).toFixed(2)} STT`} sub="V5 contract funds" />
+        <StatCard label="Block Time" value="101ms" sub="Somnia finality" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        <StatCard label="Avg Confidence" value={f.avgConfidence > 0 ? `${f.avgConfidence}%` : "85%"} sub="LLM resolution" />
+        <StatCard label="Avg Confidence" value={f.avgConfidence > 0 ? `${f.avgConfidence}%` : "—"} sub="LLM resolution" />
         <StatCard label="Failed" value={f.totalFailed} sub="with retry" />
-        <StatCard label="Today Created" value={`${f.todayCount}/${f.maxMarketsPerDay}`} sub="daily limit" />
+        <StatCard label="Today Created" value={f.todayCount} sub="created today" />
         <StatCard label="Scan Interval" value={`${f.scanInterval / 60}m`} sub="between creates" />
-        <StatCard label="Last Create" value={r.lastCreateBlock > 0 ? `#${(r.lastCreateBlock / 1000000).toFixed(1)}M` : "pending"} sub="ReactiveV4" />
+        <StatCard label="Last Create" value={r.lastCreateTimestamp > 0 ? new Date(r.lastCreateTimestamp * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "pending"} sub="ReactiveV5" />
       </div>
 
       {/* Rules Engine */}
@@ -162,16 +162,16 @@ export default function AIPage() {
             <p className="text-[10px] text-muted-foreground">Scan Interval</p>
           </div>
           <div>
-            <p className="text-lg font-mono font-bold">{f.maxRetryCreate}</p>
-            <p className="text-[10px] text-muted-foreground">Max Retry Create</p>
+            <p className="text-lg font-mono font-bold">{f.balanceMinimum} STT</p>
+            <p className="text-[10px] text-muted-foreground">Min Balance to Create</p>
           </div>
           <div>
-            <p className="text-lg font-mono font-bold">{f.maxRetryResolve}</p>
-            <p className="text-[10px] text-muted-foreground">Max Retry Resolve</p>
+            <p className="text-lg font-mono font-bold">{f.confidenceThreshold}%</p>
+            <p className="text-[10px] text-muted-foreground">Confidence Threshold</p>
           </div>
           <div>
-            <p className="text-lg font-mono font-bold">{f.maxMarketsPerDay}</p>
-            <p className="text-[10px] text-muted-foreground">Max Markets/Day</p>
+            <p className="text-lg font-mono font-bold">{f.activeMarkets}</p>
+            <p className="text-[10px] text-muted-foreground">Active Markets</p>
           </div>
         </div>
       </Card>
@@ -182,9 +182,8 @@ export default function AIPage() {
           <h3 className="text-xs font-semibold">Deployed Contracts (Somnia Testnet)</h3>
         </div>
         <div className="divide-y divide-border/50">
-          <ContractRow name="SantioraV4 (Deep Research)" address={SANTIORA_V4} detail={`${Number(f.balance).toFixed(2)} STT`} />
-          <ContractRow name="SantioraReactiveV4" address={SANTIORA_REACTIVE_V4} detail={`${r.createFires + r.resolveFires} fires`} />
-          <ContractRow name="MarketRegistryV2" address={MARKET_REGISTRY} detail={`${f.totalMarkets} markets`} />
+          <ContractRow name="SantioraV5 (LLM Orchestrator)" address={SANTIORA_V5} detail={`${f.totalCreated} markets`} />
+          <ContractRow name="V5Prompts" address={SANTIORA_V5_PROMPTS} detail="External prompt builder" />
           <ContractRow name="Agent Platform" address={CONTRACTS.PLATFORM} detail="Proxy → 0xc49e..." />
           <ContractRow name="LLM Agent" address="12847293847561029384" detail="Qwen3-30B | inferToolsChat" />
         </div>
@@ -218,7 +217,7 @@ export default function AIPage() {
         <h3 className="text-xs font-semibold mb-3">Why Somnia for Autonomous Agents</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="p-3 rounded bg-green-500/5 border border-green-500/10">
-            <p className="text-2xl font-mono font-bold text-green-600">400ms</p>
+            <p className="text-2xl font-mono font-bold text-green-600">101ms</p>
             <p className="text-[10px] text-muted-foreground mt-1">Block finality — agents react in real-time</p>
           </div>
           <div className="p-3 rounded bg-blue-500/5 border border-blue-500/10">

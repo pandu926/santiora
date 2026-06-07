@@ -14,6 +14,7 @@ import { formatUnits, parseUnits } from "viem";
 import { Clock, TrendingUp, Bot, ExternalLink, Shield, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useMarketDetail } from "@/hooks/useMarketDetail";
 import { usePlaceBet, type BetState } from "@/hooks/usePlaceBet";
+import { useV5PlaceBet, useV5BettingPool } from "@/hooks/useV5PlaceBet";
 import { SUSD_ABI, SUSD_ADDRESS } from "@/lib/abi/SUSD";
 import { ResolutionPanel } from "./resolution-panel";
 import { ClaimButton } from "./claim-button";
@@ -57,11 +58,69 @@ export default function MarketDetailPage() {
   const [amount, setAmount] = useState("");
   const [countdown, setCountdown] = useState("");
 
-  const { market, yesOdds, noOdds, totalCollateral, isLoading, error, refetch } = useMarketDetail(address || "");
-  const { placeBet, state: betState, txHash, error: betError, reset: resetBet } = usePlaceBet(
+  // Parse V5 market ID from contract:id URL format
+  const isV5 = useMemo(() => {
+    const decoded = decodeURIComponent(address || "");
+    const colon = decoded.lastIndexOf(":");
+    return colon > 0 && !isNaN(parseInt(decoded.slice(colon + 1), 10));
+  }, [address]);
+
+  const marketId = useMemo(() => {
+    if (!isV5) return -1;
+    const decoded = decodeURIComponent(address || "");
+    return parseInt(decoded.slice(decoded.lastIndexOf(":") + 1), 10);
+  }, [isV5, address]);
+
+  const { market, isLoading, error, refetch } = useMarketDetail(address || "");
+
+  // V5 pool data (live odds, pool totals, user position)
+  const {
+    yesOdds: poolYesOdds,
+    noOdds: poolNoOdds,
+    yesTotal,
+    noTotal,
+    userYes,
+    userNo,
+    alreadyClaimed,
+    refetch: refetchPool,
+  } = useV5BettingPool(marketId);
+
+  const handleRefetch = () => { refetch(); refetchPool(); };
+
+  // V5 bet/claim hooks (all hooks must be at top level)
+  const {
+    placeBet: v5PlaceBet,
+    claimWinnings,
+    state: v5BetState,
+    txHash: v5TxHash,
+    error: v5BetError,
+    reset: resetV5Bet,
+  } = useV5PlaceBet(marketId, handleRefetch);
+
+  // Legacy SUSD hook
+  const { placeBet: legacyPlaceBet, state: legacyBetState, txHash: legacyTxHash, error: legacyBetError, reset: resetLegacyBet } = usePlaceBet(
     address || "",
-    refetch
+    handleRefetch
   );
+
+  const placeBet   = isV5 ? v5PlaceBet   : legacyPlaceBet;
+  const betState   = isV5 ? v5BetState   : legacyBetState;
+  const txHash     = isV5 ? v5TxHash     : legacyTxHash;
+  const betError   = isV5 ? v5BetError   : legacyBetError;
+  const resetBet   = isV5 ? resetV5Bet   : resetLegacyBet;
+
+  // Odds: for V5 use live pool odds, for legacy use market data
+  const yesOdds = isV5 ? poolYesOdds : (market?.yesOdds ?? 50);
+  const noOdds  = isV5 ? poolNoOdds  : (market?.noOdds  ?? 50);
+
+  const poolVolume = isV5 ? Number(yesTotal + noTotal) / 1e18 : 0;
+  const totalCollateral = isV5
+    ? poolVolume.toFixed(2)
+    : (market?.totalCollateral ?? "0");
+
+  const hasPosition = isV5 && (userYes > 0n || userNo > 0n);
+  const isResolved  = (market?.status ?? 0) >= 3;
+  const canClaim    = isV5 && isResolved && hasPosition && !alreadyClaimed;
 
   // SUSD balance for connected user
   const { data: susdBalance } = useReadContract({
@@ -102,7 +161,6 @@ export default function MarketDetailPage() {
 
   const isMarketActive = market?.status === 1 && market?.deadline > Math.floor(Date.now() / 1000);
   const isExpired = market?.status === 1 && market?.deadline <= Math.floor(Date.now() / 1000);
-  const isResolved = market?.status !== undefined && market.status >= 3;
   const insufficientBalance = parsedAmount > 0n && susdBalance !== undefined && parsedAmount > (susdBalance as bigint);
   const canBet = isConnected && isMarketActive && parsedAmount > 0n && !insufficientBalance && betState === "idle";
 
@@ -143,10 +201,11 @@ export default function MarketDetailPage() {
   }
 
   const isSusdMarket = market?.isSusdMarket ?? false;
+  const showBetPanel = isV5 ? isMarketActive : isSusdMarket && isMarketActive;
 
   return (
     <PageTransition>
-      <div className={`grid ${isSusdMarket ? "lg:grid-cols-[1fr_320px]" : ""} gap-6`}>
+      <div className={`grid ${showBetPanel || canClaim ? "lg:grid-cols-[1fr_320px]" : ""} gap-6`}>
         {/* Main Content */}
         <div className="space-y-6">
           {/* Header */}
@@ -295,9 +354,9 @@ export default function MarketDetailPage() {
           </div>
         </div>
 
-        {/* Bet Panel (Sidebar) - only for active SUSD markets */}
-        {isSusdMarket && isMarketActive && (
-        <div className="lg:sticky lg:top-20 h-fit">
+        {/* Bet Panel / Claim Panel (Sidebar) */}
+        {(showBetPanel || canClaim) && (
+        <div className="lg:sticky lg:top-20 h-fit space-y-4">
           <Card className="p-5">
             <h3 className="text-sm font-medium mb-4">Place Bet</h3>
 
@@ -427,6 +486,67 @@ export default function MarketDetailPage() {
               </Button>
             )}
           </Card>
+
+          {/* V5 Pool Stats */}
+          {isV5 && (
+            <Card className="p-4">
+              <h3 className="text-xs font-semibold mb-3">Pool Stats</h3>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">YES Pool</span>
+                  <span className="font-mono">{(Number(yesTotal) / 1e18).toFixed(2)} SUSD</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">NO Pool</span>
+                  <span className="font-mono">{(Number(noTotal) / 1e18).toFixed(2)} SUSD</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Volume</span>
+                  <span className="font-mono font-medium">{poolVolume.toFixed(2)} SUSD</span>
+                </div>
+                {hasPosition && (
+                  <>
+                    <Separator className="my-1" />
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Your YES</span>
+                      <span className="font-mono text-success">{(Number(userYes) / 1e18).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Your NO</span>
+                      <span className="font-mono text-destructive">{(Number(userNo) / 1e18).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* V5 Claim Winnings */}
+          {canClaim && (
+            <Card className="p-4 border-success/30 bg-success/5">
+              <h3 className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Winnings Available
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Market resolved — claim your SUSD winnings.
+              </p>
+              {v5BetState === "confirmed" ? (
+                <p className="text-xs text-success text-center font-medium">Claimed successfully ✓</p>
+              ) : (
+                <Button
+                  className="w-full"
+                  size="sm"
+                  disabled={v5BetState !== "idle"}
+                  onClick={claimWinnings}
+                >
+                  {v5BetState === "betting" ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}
+                  {v5BetState === "betting" ? "Claiming..." : "Claim Winnings"}
+                </Button>
+              )}
+              {v5BetError && <p className="text-xs text-destructive mt-2">{v5BetError}</p>}
+            </Card>
+          )}
         </div>
         )}
       </div>

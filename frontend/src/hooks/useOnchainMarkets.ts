@@ -50,16 +50,39 @@ function toDisplay(m: OnchainMarket): MarketDisplay {
   };
 }
 
+const TOPIC_PATTERNS: [RegExp, string][] = [
+  [/bitcoin.*\$65[,.]?000/i, "btc-65k"],
+  [/bitcoin.*\$70[,.]?000/i, "btc-70k"],
+  [/bitcoin.*\$60[,.]?000/i, "btc-60k"],
+  [/btc.*65[,.]?000/i, "btc-65k"],
+  [/btc.*70[,.]?000/i, "btc-70k"],
+  [/btc.*60[,.]?000/i, "btc-60k"],
+  [/bitcoin.*higher than ethereum/i, "btc-vs-eth"],
+  [/ethereum.*\$3[,.]?000/i, "eth-3k"],
+  [/spurs.*knicks/i, "spurs-knicks"],
+  [/knicks.*spurs/i, "spurs-knicks"],
+];
+
+function topicKey(question: string): string {
+  for (const [pattern, key] of TOPIC_PATTERNS) {
+    if (pattern.test(question)) return key;
+  }
+  return question.slice(0, 50).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
 function deduplicateMarkets(markets: MarketDisplay[]): MarketDisplay[] {
   const seen = new Map<string, MarketDisplay>();
   for (const m of markets) {
-    const key = m.question.slice(0, 60).toLowerCase();
+    const key = topicKey(m.question);
     if (!seen.has(key)) {
       seen.set(key, m);
     } else {
       const existing = seen.get(key)!;
-      if (m.isSusd && !existing.isSusd) seen.set(key, m);
-      else if (m.status === "resolved" && existing.status !== "resolved") seen.set(key, m);
+      if (m.status === "resolved" && existing.status !== "resolved") {
+        seen.set(key, m);
+      } else if (m.isSusd && !existing.isSusd) {
+        seen.set(key, m);
+      }
     }
   }
   return [...seen.values()];
